@@ -16,7 +16,7 @@ const translations = {
     'wallet.subtitle': 'Community web wallet',
     'wallet.blockHeight': 'Block',
     'wallet.available': 'Available',
-    'wallet.locked': 'Locked',
+    'wallet.locked': 'Pending',
     'wallet.memPool': 'Mem Pool',
     'wallet.create': 'Create Wallet',
     'wallet.restore': 'Restore Wallet',
@@ -66,6 +66,7 @@ const translations = {
     'wallet.lock.title': 'Wallet Locked',
     'wallet.lock.passwordInfo': 'Enter your password to unlock',
     'wallet.lock.unlock': 'Unlock Wallet',
+    'wallet.lock.input': 'Enter password',
     'wallet.lock.error': 'Invalid password',
 
     // Main Interface
@@ -283,7 +284,7 @@ const translations = {
     'wallet.subtitle': '社区 web 钱包',
     'wallet.blockHeight': '区块高度',
     'wallet.available': '可用',
-    'wallet.locked': '锁定',
+    'wallet.locked': '待确认',
     'wallet.memPool': '内存池',
     'wallet.create': '创建钱包',
     'wallet.restore': '恢复钱包',
@@ -333,6 +334,7 @@ const translations = {
     'wallet.lock.title': '钱包已锁定',
     'wallet.lock.passwordInfo': '输入您的密码以解锁',
     'wallet.lock.unlock': '解锁钱包',
+    'wallet.lock.input': '请输入密码',
     'wallet.lock.error': '密码错误',
 
     // Main Interface
@@ -549,7 +551,7 @@ const translations = {
     'wallet.subtitle': 'Комьюнити веб-кошелек',
     'wallet.blockHeight': 'Блоки',
     'wallet.available': 'Доступно',
-    'wallet.locked': 'Заблокировано',
+    'wallet.locked': 'В ожидании',
     'wallet.memPool': 'Пул транзакций',
     'wallet.create': 'Создать кошелек',
     'wallet.restore': 'Восстановить кошелек',
@@ -600,6 +602,7 @@ const translations = {
     'wallet.lock.title': 'Кошелек заблокирован',
     'wallet.lock.passwordInfo': 'Введите пароль для разблокировки',
     'wallet.lock.unlock': 'Разблокировать кошелек',
+    'wallet.lock.input': 'Введите пароль',
     'wallet.lock.error': 'Неверный пароль',
 
     // Main Interface

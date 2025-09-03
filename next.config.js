@@ -1,3 +1,11 @@
+
+const withPWA = require('next-pwa')({
+  dest: 'public', // Service Worker 和相关文件的输出目录
+  register: true, // 自动在客户端注册 Service Worker
+  skipWaiting: true, // 安装后立即激活新的 Service Worker
+ disable: process.env.NODE_ENV === 'development', // 在开发环境中禁用 PWA，只在生产环境生效
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
@@ -5,8 +13,8 @@ const nextConfig = {
       return [
         {
           source: '/api/:path*',
-          destination: 'http://localhost:7020/api/:path*',
-          // destination: 'http://148.135.95.250:7960/api/:path*',
+          // destination: 'http://localhost:7020/api/:path*',
+          destination: 'https://test.scash.network/api/:path*',
         },
         {
           source: '/ext/:path*',
@@ -62,4 +70,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports =  withPWA(nextConfig);

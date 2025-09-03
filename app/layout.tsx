@@ -6,10 +6,52 @@ import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "SCASH Wallet",
-  description: "Non-custodial cryptocurrency wallet",
-  generator: "v0.app",
-}
+  title: "SCASH Wallet - Secure Non-Custodial Wallet",
+  description:
+    "SCASH Wallet is a secure, non-custodial cryptocurrency wallet with client-side transaction signing, AES-encrypted storage, and full user privacy.",
+  keywords: [
+    "SCASH Wallet",
+    "SCASH",
+    "cryptocurrency wallet",
+    "non-custodial",
+    "bitcoin-like wallet",
+    "secure crypto wallet",
+    "AES encryption",
+    "client-side signing",
+  ],
+  authors: [{ name: "SCASH Community" }],
+  creator: "SCASH Community",
+  publisher: "SCASH Community",
+  applicationName: "SCASH Wallet",
+  openGraph: {
+    title: "SCASH Wallet - Secure Non-Custodial Wallet",
+    description:
+      "A modern and secure SCASH wallet that keeps your keys safe. Local signing, no private key ever leaves your device.",
+    url: "https://wallet.scash.network/",
+    siteName: "SCASH Wallet",
+    images: [
+      {
+        url: "https://wallet.scash.network/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "SCASH Wallet",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SCASH Wallet - Secure Non-Custodial Wallet",
+    description:
+      "SCASH Wallet protects your keys with AES encryption and local signing. Your crypto, your control.",
+    images: ["https://wallet.scash.network/og-image.png"],
+    creator: "@scash_wallet",
+  },
+  category: "finance",
+  generator: "Next.js",
+};
+
 
 export default function RootLayout({
   children,
@@ -19,6 +61,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+           <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#7B2EFF" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <style>{`
 html {

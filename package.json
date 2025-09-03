@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev": "next dev  -p 3020",
     "build": "next build",
-    "dev": "next dev",
-    "lint": "next lint",
-    "start": "next start"
+    "start": "next start  -p 7021",
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -54,6 +54,7 @@
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
+    "next-pwa": "^5.6.0",
     "next-themes": "^0.4.6",
     "qrcode": "^1.5.4",
     "react": "^19",
@@ -73,6 +74,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
     "@types/crypto-js": "^4.2.2",
+    "@types/minimatch": "^6.0.0",
     "@types/node": "^22",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19",

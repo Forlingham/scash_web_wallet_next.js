@@ -412,7 +412,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                       {/* 交易时间，时间戳转换成 月、日  时分秒 */}
                       <span className="text-gray-400 text-sm">{new Date(tx.timestamp * 1000).toLocaleString()}</span>
                       {tx.status === 'pending' && (
-                        <span className="text-orange-500 text-xs ml-5">
+                        <span className="text-orange-500 text-xs ml-5 whitespace-nowrap">
                           {t('transactions.confirmations')}: {confirmations} / {blockchainInfo.headers - tx.height}
                         </span>
                       )}

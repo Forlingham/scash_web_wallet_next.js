@@ -84,9 +84,6 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     try {
       const getBaseFeeRes = await getBaseFee()
       setBaseFee(getBaseFeeRes.fee)
-
-      // const getScantxoutsetRes = await getScantxoutsetApi(wallet.address)
-      // setUnspents(getScantxoutsetRes.data.rpcData.unspents)
     } catch (error) {
       console.log(error)
     } finally {
@@ -231,7 +228,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     // 统计发送TX输入数量 - 使用本地变量而不是状态变量
     const inputCount = pickUnspentsArr.length
     // 统计输出地址数量 (收款地址 + 找零地址)
-    const outputCount = sendList.filter((item) => item.address).length + 2
+    const outputCount = sendList.filter((item) => item.address).length + 5
 
     // 计算app手续费
     const appFee = calcAppFee(_sendAmount)
@@ -301,7 +298,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
   const handlePasswordSubmit = () => {
     // 验证密码
     if (!password) {
-      setPasswordError('请输入密码')
+      setPasswordError(t('wallet.lock.input'))
       return
     }
 
@@ -315,7 +312,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     // password
     const walletObj = decryptWallet(wallet.encryptedWallet, password)
     if (!walletObj.isSuccess) {
-      setPasswordError('密码错误')
+      setPasswordError(t('wallet.lock.error'))
       setShowConfirmDialog(false)
       return
     }
@@ -386,35 +383,12 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
       console.log(error)
     }
 
-    // console.log(pickUnspents)
-    // console.log(sendListConfirm)
-    // console.log(networkFee)
-
-    // setIsSliding(true)
-    // setShowConfirmDialog(false)
-
-    // Simulate transaction processing
-    // setTimeout(() => {
-    //   setStep('success')
-    //   setIsSliding(false)
-    //   setPassword('')
-
-    //   toast({
-    //     title: 'Transaction Sent',
-    //     description: 'Your transaction has been broadcast to the network'
-    //   })
-    // }, 2000)
   }
 
   const handleCancelTransaction = () => {
-    // setShowConfirmDialog(false)
-    // setPassword('')
-    // setPasswordError('')
+    return
   }
 
-  // const clearAddress = () => {
-  //   setRecipientAddress('')
-  // }
 
   if (step === 'success') {
     return (

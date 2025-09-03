@@ -68,6 +68,7 @@ interface WalletState {
   addTransaction: (transaction: Transaction) => void
   addPendingTransaction: (transaction: PendingTransaction) => void
   setUnspent: (unspent: Unspent[]) => void
+  deleteUnspent: (txid: string) => void
   lockWallet: () => void
   unlockWallet: (password: string) => boolean
   clearWallet: () => void
@@ -193,6 +194,11 @@ export const useWalletStore = create<WalletState>()(
             }
           })
           // state.unspent = unspent
+        })
+      },
+      deleteUnspent: (txid: string) => {
+        set((state) => {
+          state.unspent = state.unspent.filter((item) => item.txid !== txid)
         })
       },
 
@@ -330,6 +336,7 @@ export const useWalletStore = create<WalletState>()(
       // 获取当前账号余额，和可用的交易
       setUpdateBalance: async () => {
         const address = get().wallet.address
+        const pendingTransactions = get().pendingTransactions
         if (!address) return
         try {
           const res = await getScantxoutsetApi(address)
@@ -341,7 +348,11 @@ export const useWalletStore = create<WalletState>()(
             const unspents = resData.unspents
             for (const unspent of unspents) {
               unspent.isHasMemPool = false
-              if (unspent.height < currentHeight - get().confirmations) {
+              // 判断是不是自己的找零交易
+              const isFindZero = pendingTransactions.find((tx) => {
+                return tx.id === unspent.txid
+              })
+              if (unspent.height < currentHeight - get().confirmations || isFindZero) {
                 unspent.isUsable = true
               } else {
                 unspent.isUsable = false
@@ -378,7 +389,14 @@ export const useWalletStore = create<WalletState>()(
               for (const pickUnspent of tx.pickUnspents) {
                 const unspent = state.unspent.find((item) => item.txid === pickUnspent.txid)
                 if (unspent) {
-                  unspent.isHasMemPool = true // 在 set 内部写，immer 允许直接改
+                  unspent.isHasMemPool = true
+                }
+              }
+            } else if (tx.status === 'confirmed') {
+              for (const pickUnspent of tx.pickUnspents) {
+                const unspent = state.unspent.find((item) => item.txid === pickUnspent.txid)
+                if (unspent) {
+                  get().deleteUnspent(unspent.txid)
                 }
               }
             }
@@ -475,7 +493,7 @@ export const useWalletState = () => {
     isInitialized,
     isLoading,
     error,
-    isLocked,
+    isLocked
     // recentTransactions,
     // formattedBalance,
     // isConnected
