@@ -11,7 +11,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const VERSION = '1.0'
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+export const VERSION = '1.1'
 
 export const NAME_TOKEN = 'SCASH'
 
@@ -229,7 +233,7 @@ export function hideString(str: string) {
     return str
   }
   const prefix = str.slice(0, 4)
-  const suffix = str.slice(-4)
+  const suffix = str.slice(-6)
   return `${prefix}...${suffix}`
 }
 

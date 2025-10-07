@@ -209,13 +209,12 @@ export const useWalletStore = create<WalletState>()(
       },
 
       unlockWallet: (password: string) => {
-        // 这里应该实现密码验证逻辑
-        // 暂时简单返回 true
         if (!password) {
           return false
         }
         const walletObj = decryptWallet(get().wallet.encryptedWallet, password)
-        if (!walletObj) {
+
+        if (!walletObj || !walletObj.wallet || !walletObj.isSuccess) {
           return false
         }
 
@@ -396,7 +395,8 @@ export const useWalletStore = create<WalletState>()(
               for (const pickUnspent of tx.pickUnspents) {
                 const unspent = state.unspent.find((item) => item.txid === pickUnspent.txid)
                 if (unspent) {
-                  get().deleteUnspent(unspent.txid)
+                  // 在状态更新中直接过滤掉要删除的unspent
+                  state.unspent = state.unspent.filter((item) => item.txid !== unspent.txid)
                 }
               }
             }
@@ -433,6 +433,7 @@ export const useWalletStore = create<WalletState>()(
         isInitialized: state.isInitialized,
         isLocked: state.isLocked,
         coinPrice: state.coinPrice
+        // unspent: state.unspent
       })
     }
   )

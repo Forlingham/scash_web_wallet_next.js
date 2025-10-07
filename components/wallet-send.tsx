@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useLanguage } from '@/contexts/language-context'
-import { ArrowUpDown, X, QrCode, ChevronRight, ArrowLeft, Lock } from 'lucide-react'
+import { ArrowUpDown, X, QrCode, ChevronRight, ArrowLeft, Lock, ExternalLink } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   AlertDialog,
@@ -29,8 +29,11 @@ import {
   NAME_TOKEN,
   SCASH_NETWORK,
   signTransaction,
-  validateScashAddress
+  validateScashAddress,
+  onOpenExplorer,
+  sleep
 } from '@/lib/utils'
+import { QRScannerComponent } from '@/components/qr-scanner'
 import { PendingTransaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
 import { getBaseFeeApi, getScantxoutsetApi, onBroadcastApi, Unspent } from '@/lib/api'
 import Decimal from 'decimal.js'
@@ -76,6 +79,8 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
   const [password, setPassword] = useState<string>('')
   const [passwordError, setPasswordError] = useState<string>('')
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false)
+  const [showQRScanner, setShowQRScanner] = useState<boolean>(false)
+  const [currentScanIndex, setCurrentScanIndex] = useState<number>(0)
 
   const [currentPendingTransaction, setCurrentPendingTransaction] = useState<PendingTransaction>()
 
@@ -287,12 +292,64 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     setSendListConfirm(validSendList)
   }
 
-  const handleScanQR = () => {
-    // Mock QR scanner functionality
-    toast({
-      title: 'QR Scanner',
-      description: 'QR scanner feature will be implemented soon'
-    })
+  const handleScanQR = (index: number) => {
+    setCurrentScanIndex(index)
+    setShowQRScanner(true)
+  }
+
+  const handleScanResult = (result: string) => {
+    try {
+      // 尝试解析二维码内容
+      let address = result
+      let amount = ''
+
+      // 检查是否包含金额信息 (格式: address?amount=value)
+      if (result.includes('?amount=')) {
+        const [addr, params] = result.split('?')
+        address = addr
+        const urlParams = new URLSearchParams(params)
+        amount = urlParams.get('amount') || ''
+      }
+
+      // 验证地址格式
+      if (validateScashAddress(address)) {
+        // 更新对应索引的地址和金额
+        setSendList((prev) => {
+          const newList = [...prev]
+          newList[currentScanIndex].address = address
+          if (amount) {
+            newList[currentScanIndex].amount = amount
+          }
+          return newList
+        })
+
+        // 清除可能的错误状态
+        setAddressErrors((prev) => {
+          const newErrors = { ...prev }
+          delete newErrors[currentScanIndex]
+          return newErrors
+        })
+
+        toast({
+          title: t('send.successScan'),
+          description: t('send.successScanDesc'),
+          variant: 'success'
+        })
+      } else {
+        toast({
+          title: t('send.errorScan'),
+          description: t('send.errorScanDesc'),
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      console.error('解析二维码失败:', error)
+      toast({
+        title: t('send.errorScan'),
+        description: t('send.errorScanDesc'),
+        variant: 'destructive'
+      })
+    }
   }
 
   const handlePasswordSubmit = () => {
@@ -308,16 +365,21 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     setShowConfirmDialog(true)
   }
 
+  const [isConfirmLoading, setIsConfirmLoading] = useState<boolean>(false)
+
   const handleConfirmTransaction = async () => {
+    setIsConfirmLoading(true)
     // password
     const walletObj = decryptWallet(wallet.encryptedWallet, password)
     if (!walletObj.isSuccess) {
       setPasswordError(t('wallet.lock.error'))
       setShowConfirmDialog(false)
+      setIsConfirmLoading(false)
       return
     }
 
     if (!walletObj.wallet) {
+      setIsConfirmLoading(false)
       return
     }
 
@@ -333,6 +395,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         description: '',
         variant: 'destructive'
       })
+      setIsConfirmLoading(false)
       return
     }
 
@@ -354,6 +417,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
           description: res.data.error.error.message,
           variant: 'destructive'
         })
+        setIsConfirmLoading(false)
         return
       }
 
@@ -369,6 +433,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         timestamp: Date.now(),
         status: 'pending'
       }
+      await sleep(1533)
       addPendingTransaction(pendingTransaction)
       setCurrentPendingTransaction(pendingTransaction)
       setStep('success')
@@ -381,14 +446,25 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
       })
     } catch (error) {
       console.log(error)
+      toast({
+        title: t('send.error'),
+        description: t('send.errorInfo'),
+        variant: 'destructive'
+      })
+    } finally {
+      setIsConfirmLoading(false)
+      setShowConfirmDialog(false)
     }
-
   }
 
-  const handleCancelTransaction = () => {
-    return
-  }
+  const [isCancelLoading, setIsCancelLoading] = useState<boolean>(false)
 
+  const handleCancelTransaction = async () => {
+    setIsCancelLoading(true)
+    await sleep(1533)
+    setIsCancelLoading(false)
+    setShowConfirmDialog(false)
+  }
 
   if (step === 'success') {
     return (
@@ -411,6 +487,19 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
             {/* Transaction Details */}
             {currentPendingTransaction && (
               <div className="space-y-4">
+                <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-600/30 backdrop-blur-sm">
+                  <div className="flex flex-col space-y-2">
+                    <p className="text-purple-300 text-xs uppercase tracking-wide">Transaction ID</p>
+                    <p className="text-white text-sm font-mono break-all">{currentPendingTransaction.id}</p>
+                    <button
+                      onClick={() => onOpenExplorer('1', 'tx', currentPendingTransaction.id)}
+                      className="flex items-center space-x-1 text-purple-300 hover:text-white text-sm transition-colors self-start mt-1"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      <span>{t('transactions.openExplorer')}</span>
+                    </button>
+                  </div>
+                </div>
                 {/* Amount Card */}
                 <div className="bg-gradient-to-r from-purple-900/50 to-purple-800/50 rounded-xl p-4 border border-purple-600/30 backdrop-blur-sm">
                   <div className="text-center">
@@ -551,7 +640,14 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         </Card>
 
         {/* Confirm Button with Dialog */}
-        <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialog
+          open={showConfirmDialog}
+          onOpenChange={(open) => {
+            // 只允许通过代码控制关闭，不允许点击外部关闭
+            if (!open) return
+            setShowConfirmDialog(open)
+          }}
+        >
           <AlertDialogTrigger asChild>
             <Button
               onClick={handlePasswordSubmit}
@@ -572,10 +668,14 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={handleCancelTransaction} className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600">
-                {t('send.cancel')}
+                {isCancelLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : t('send.cancel')}
               </AlertDialogCancel>
               <AlertDialogAction onClick={handleConfirmTransaction} className="bg-green-500 hover:bg-green-600 text-white">
-                {t('send.confirmTransactionOn')}
+                {isConfirmLoading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  t('send.confirmTransactionOn')
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -629,7 +729,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
                 </Button>
               )}
               <Button
-                onClick={handleScanQR}
+                onClick={() => handleScanQR(index)}
                 variant="ghost"
                 size="sm"
                 className="absolute right-1 top-1/2 transform -translate-y-1/2 text-green-400 hover:text-green-300"
@@ -744,6 +844,13 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
           t('send.confirm')
         )}
       </Button>
+
+      {/* QR Scanner Component */}
+      <QRScannerComponent
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScanResult={handleScanResult}
+      />
     </div>
   )
 }

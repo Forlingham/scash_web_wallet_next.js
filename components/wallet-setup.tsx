@@ -315,7 +315,7 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center gap-3">
           <img
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo.jpg-KmKWTogu9C4GGzSeODyNdvCFtQgBWj.jpeg"
+            src="/logo.jpg"
             alt="SCASH Logo"
             className="w-8 h-8 rounded-full"
           />
@@ -330,7 +330,7 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
               <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo.jpg-KmKWTogu9C4GGzSeODyNdvCFtQgBWj.jpeg"
+                src="/logo.jpg"
                 alt="SCASH Logo"
                 className="w-16 h-16 rounded-full mx-auto"
               />

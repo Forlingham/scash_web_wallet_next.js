@@ -167,6 +167,28 @@ const translations = {
     'send.confirmTransactionOn': 'Confirm Transaction',
     'send.backToEdit': 'Back to Edit',
 
+    'send.error': 'Send Failed',
+    'send.errorInfo': 'Please refresh the wallet and try again',
+
+    'qr.title': 'Scan QR Code',
+    'qr.error': 'Failed to find camera',
+    'qr.errorDesc': 'Please check camera settings',
+    'qr.scanning': 'Scanning...',
+    'qr.cameraStopped': 'Camera Stopped',
+    'qr.checkPermissions': 'Please check camera permissions',
+    'qr.stopScanning': 'Stop Scanning',
+    'qr.startScanning': 'Start Scanning',
+    'qr.cancel': 'Cancel',
+    'qr.loading': 'Loading...',
+    'qr.retry': 'Retry',
+
+    'send.successScan': "Scanning Successful",
+    'send.successScanDesc': "Address was automatically inserted",
+    'send.errorScan': "Scanning Failed",
+    'send.errorScanDesc': "Address in QR code has incorrect format",
+
+
+
     'receive.title': 'Receive',
     'receive.to': 'Receive to',
     'receive.request': 'Request Amount (Optional)',
@@ -206,7 +228,7 @@ const translations = {
     'common.contactSupport': 'Contact Support',
     'common.contactSupportDesc': 'Need additional help? Contact our support team for personalized assistance.',
     'common.contactSupportGitHub': 'Contact Support on GitHub',
-    'common.contactSupportTelegram': 'Contact Support on Telegram',
+    'common.contactSupportTwitter': 'Contact Support on Twitter',
 
     'safety.instructions': `
     <section>
@@ -435,6 +457,26 @@ const translations = {
     'send.confirmTransactionOn': '确认交易',
     'send.backToEdit': '返回编辑',
 
+    'send.error': '发送失败',
+    'send.errorInfo': '请刷新钱包后重试',
+
+    'qr.title': '扫描二维码',
+    'qr.error': '未检测到摄像头设备',
+    'qr.errorDesc': '启动摄像头失败，请检查权限设置',
+    'qr.scanning': '正在扫描，请将二维码对准摄像头',
+    'qr.cameraStopped': '摄像头已停止',
+    'qr.checkPermissions': '请检查摄像头权限或设备连接',
+    'qr.stopScanning': '停止扫描',
+    'qr.startScanning': '开始扫描',
+    'qr.cancel': '取消',
+    'qr.loading': '正在启动摄像头...',
+    'qr.retry': '重试',
+
+    'send.successScan': '扫描成功',
+    'send.successScanDesc': '地址已自动填入',
+    'send.errorScan': '扫描失败',
+    'send.errorScanDesc': '二维码中的地址格式不正确',
+
     'receive.title': '收款',
     'receive.to': '收款到',
     'receive.request': '请求金额（可选）',
@@ -469,11 +511,11 @@ const translations = {
     'common.supportAuthorDesc': '大家的捐赠不仅是对作者的支持，更是推动新功能开发的动力，为 SCASH 社区的发展贡献一份力量。',
     'common.copySuccess': '复制成功',
     'common.addressCopied': '地址已复制',
-    "common.walletInfo":"非托管web钱包",
-    "common.contactSupport":"联系我们",
-    "common.contactSupportDesc":"遇到问题可以在GitHub上进行提交和在Telegram群中进行留言。",
-    "common.contactSupportGitHub":"GitHub项目",
-    "common.contactSupportTelegram":"Telegram群组",
+    'common.walletInfo': '非托管web钱包',
+    'common.contactSupport': '联系我们',
+    'common.contactSupportDesc': '遇到问题可以在GitHub上进行提交和在Telegram群中进行留言。',
+    'common.contactSupportGitHub': 'GitHub项目',
+    'common.contactSupportTwitter':'开发者推特',
 
     'safety.instructions': `
     <section>
@@ -702,6 +744,28 @@ const translations = {
     'send.confirmTransactionOn': 'Подтвердить транзакцию',
     'send.backToEdit': 'Вернуться к редактированию',
 
+    'send.error': 'Отправка не удалась',
+    'send.errorInfo': 'Пожалуйста, попробуйте еще раз',
+
+    'qr.title': 'Сканировать QR-код',
+    'qr.error': 'Не удалось найти камеру',
+    'qr.errorDesc': 'Пожалуйста, проверьте настройки камеры',
+    'qr.scanning': 'Сканирование...',
+    'qr.cameraStopped': 'Камера остановлена',
+    'qr.checkPermissions': 'Пожалуйста, проверьте разрешения на использование камеры',
+    'qr.stopScanning': 'Остановить сканирование',
+    'qr.startScanning': 'Начать сканирование',
+    'qr.cancel': 'Отмена',
+    'qr.loading': 'Загрузка...',
+    'qr.retry': 'Повторить',
+
+    'send.successScan': "Сканирование успешное",
+    'send.successScanDesc': "Адрес был автоматически вставлен",
+    'send.errorScan': "Сканирование не удалось",
+    'send.errorScanDesc': "Адрес в QR-коде имеет неправильный формат",
+
+
+
     'receive.title': 'Получить',
     'receive.to': 'Получить на',
     'receive.request': 'Запросить сумму (необязательно)',
@@ -741,8 +805,7 @@ const translations = {
     'common.contactSupport': 'Связаться с поддержкой',
     'common.contactSupportDesc': 'Если у вас возникли проблемы, вы можете связаться с нашей поддержкой через GitHub или Telegram.',
     'common.contactSupportGitHub': 'Связаться с поддержкой на GitHub',
-    'common.contactSupportTelegram': 'Связаться с поддержкой на Telegram',
-    
+    'common.contactSupportTwitter': 'Связаться с поддержкой на Twitter',
 
     'safety.instructions': `
     <section>
