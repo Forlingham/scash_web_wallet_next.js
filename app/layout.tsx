@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   title: "SCASH Wallet - Secure Non-Custodial Wallet",
@@ -83,6 +84,7 @@ html {
       </head>
       <body className="antialiased bg-gray-900">
         {children}
+        <SpeedInsights />
         <Toaster />
       </body>
     </html>

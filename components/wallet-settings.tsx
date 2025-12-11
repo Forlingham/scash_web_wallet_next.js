@@ -6,7 +6,24 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useLanguage } from '@/contexts/language-context'
-import { Lock, Key, Download, Globe, Shield, HelpCircle, LogOut, Eye, EyeOff, Copy, AlertTriangle, CheckCircle, Github, Twitter } from 'lucide-react'
+import {
+  Lock,
+  Key,
+  Download,
+  Globe,
+  Shield,
+  HelpCircle,
+  LogOut,
+  Eye,
+  EyeOff,
+  Copy,
+  AlertTriangle,
+  CheckCircle,
+  Github,
+  Twitter,
+  Puzzle,
+  ExternalLink
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 import { decryptWallet, downloadWalletFile, encryptWallet, passwordMD5, VERSION } from '@/lib/utils'
@@ -494,14 +511,14 @@ export function WalletSettings({ onNavigate, onLockWallet }: WalletSettingsProps
             <h3 className="text-white font-medium">{t('common.contactSupport')}</h3>
             <p className="text-gray-400 text-sm">{t('common.contactSupportDesc')}</p>
             <div className="space-y-2">
-              <Button 
+              <Button
                 className="w-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center gap-2"
                 onClick={() => window.open('https://github.com/Forlingham/scash_web_wallet_next.js', '_blank')}
               >
                 <Github className="w-4 h-4" />
                 {t('common.contactSupportGitHub')}
               </Button>
-              <Button 
+              <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
                 onClick={() => window.open('https://x.com/Hysanalde', '_blank')}
               >
@@ -580,6 +597,15 @@ export function WalletSettings({ onNavigate, onLockWallet }: WalletSettingsProps
 
       {/* Action Buttons */}
       <div className="space-y-3 pt-4">
+        <Button
+          className="w-full bg-yellow-600 hover:bg-yellow-700 text-white flex items-center justify-center gap-2 shadow-sm transition-colors"
+          onClick={() => window.open('https://chromewebstore.google.com/detail/depmcfopjjbogpekdnegegifhkihanpl', '_blank')}
+        >
+          <Puzzle className="h-4 w-4" />
+          {t('settings.installPlugin')}
+          <ExternalLink className="h-4 w-4 opacity-80" />
+        </Button>
+
         <Button onClick={onLockWallet} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">
           <Lock className="h-4 w-4 mr-2" />
           {t('settings.lock')}
