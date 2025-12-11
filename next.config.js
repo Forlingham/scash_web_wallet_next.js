@@ -9,15 +9,14 @@ const withPWA = require('next-pwa')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
-    if (process.env.NODE_ENV !== 'production') {
-      return [
-        {
-          source: '/ext/:path*',
-          destination: 'https://scash.tv/ext/:path*',
-        },
-      ]
-    }
-    return []
+
+    return [
+      {
+        source: '/ext/:path*',
+        destination: 'https://scash.tv/ext/:path*',
+      },
+    ]
+
   },
   async headers() {
     return [
