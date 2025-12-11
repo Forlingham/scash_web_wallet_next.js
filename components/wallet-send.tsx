@@ -421,6 +421,16 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         return
       }
 
+      if (!res.data.rpcData.txid) {
+        toast({
+          title: t('send.error'),
+          description: t('send.errorTxid'),
+          variant: 'destructive'
+        })
+        setIsConfirmLoading(false)
+        return
+      }
+
       const pendingTransaction: PendingTransaction = {
         id: res.data.rpcData.txid,
         rawtx: signTransactionResult.rawtx,
@@ -846,11 +856,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
       </Button>
 
       {/* QR Scanner Component */}
-      <QRScannerComponent
-        isOpen={showQRScanner}
-        onClose={() => setShowQRScanner(false)}
-        onScanResult={handleScanResult}
-      />
+      <QRScannerComponent isOpen={showQRScanner} onClose={() => setShowQRScanner(false)} onScanResult={handleScanResult} />
     </div>
   )
 }

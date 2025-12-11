@@ -1,4 +1,4 @@
-import { BlockchainInfo, getBaseFeeApi, getBlockchainInfoApi, getScantxoutsetApi, Unspent } from '@/lib/api'
+import { getBaseFeeApi, getBlockchainInfoApi, GetblockchaininfoRPC, getCoinPriceApi, getScantxoutsetApi, Unspent } from '@/lib/api'
 import { decryptWallet } from '@/lib/utils'
 import Decimal from 'decimal.js'
 import { create } from 'zustand'
@@ -44,7 +44,7 @@ export interface PendingTransaction {
 
 // 钱包状态接口
 interface WalletState {
-  blockchainInfo: BlockchainInfo
+  blockchainInfo: GetblockchaininfoRPC
   // 状态
   wallet: WalletInfo
   //可用的交易
@@ -89,6 +89,7 @@ interface WalletState {
   unSetUpdate: () => void
   setUpdateBlockchaininfo: () => Promise<void>
   setUpdateBalance: () => Promise<void>
+  setUpdateCoinPrice: () => Promise<void>
 
   setUpdateBalanceByMemPool: () => void
 }
@@ -313,6 +314,7 @@ export const useWalletStore = create<WalletState>()(
         setTimeout(() => {
           get().setUpdateBlockchaininfo()
           get().setUpdateBalance()
+          get().setUpdateCoinPrice()
         }, 10 * 1000)
       },
 
@@ -320,15 +322,31 @@ export const useWalletStore = create<WalletState>()(
       setUpdateBlockchaininfo: async () => {
         try {
           const res = await getBlockchainInfoApi()
+
           if (res.data.success) {
             set((state) => {
               state.blockchainInfo = res.data.rpcData
-
-              state.coinPrice = res.data.rpcData.coinPrice
             })
           }
         } catch (error) {
           console.log('获取当前节点状态 错误：', error)
+        }
+      },
+
+      // 获取币价
+      setUpdateCoinPrice: async () => {
+        console.log(233);
+        
+        try {
+          const res = await getCoinPriceApi()
+          if (res.data.success) {
+            const price = res.data.rpcData.price
+            set((state) => {
+              state.coinPrice = price.toString()
+            })
+          }
+        } catch (error) {
+          console.log('获取币价 错误：', error)
         }
       },
 
@@ -462,7 +480,8 @@ export const useWalletActions = () => {
     unSetUpdate: store.unSetUpdate,
     setUpdateBlockchaininfo: store.setUpdateBlockchaininfo,
     setUpdateBalance: store.setUpdateBalance,
-    setUpdateBalanceByMemPool: store.setUpdateBalanceByMemPool
+    setUpdateBalanceByMemPool: store.setUpdateBalanceByMemPool,
+    setUpdateCoinPrice: store.setUpdateCoinPrice
   }
 }
 

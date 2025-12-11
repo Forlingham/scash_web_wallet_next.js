@@ -20,15 +20,16 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
   const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState('home')
   const [currentView, setCurrentView] = useState('home')
-  const { pendingTransactions,unspent } = useWalletState()
-  const { setUpdateBlockchaininfo, setUpdateBalance, setUpdateBalanceByMemPool } = useWalletActions()
+  const { pendingTransactions, unspent, coinPrice } = useWalletState()
+  const { setUpdateBlockchaininfo, setUpdateBalance, setUpdateBalanceByMemPool, setUpdateCoinPrice } = useWalletActions()
 
   const initGetWalletInfo = async () => {
     await setUpdateBlockchaininfo()
     await setUpdateBalance()
+    await setUpdateCoinPrice()
     if (pendingTransactions.length) {
       setUpdateBalanceByMemPool()
-    }    
+    }
   }
 
   useEffect(() => {

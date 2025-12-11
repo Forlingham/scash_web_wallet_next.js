@@ -169,6 +169,7 @@ const translations = {
 
     'send.error': 'Send Failed',
     'send.errorInfo': 'Please refresh the wallet and try again',
+    'send.errorTxid': 'Transaction ID is empty',
 
     'qr.title': 'Scan QR Code',
     'qr.error': 'Failed to find camera',
@@ -182,12 +183,10 @@ const translations = {
     'qr.loading': 'Loading...',
     'qr.retry': 'Retry',
 
-    'send.successScan': "Scanning Successful",
-    'send.successScanDesc': "Address was automatically inserted",
-    'send.errorScan': "Scanning Failed",
-    'send.errorScanDesc': "Address in QR code has incorrect format",
-
-
+    'send.successScan': 'Scanning Successful',
+    'send.successScanDesc': 'Address was automatically inserted',
+    'send.errorScan': 'Scanning Failed',
+    'send.errorScanDesc': 'Address in QR code has incorrect format',
 
     'receive.title': 'Receive',
     'receive.to': 'Receive to',
@@ -459,6 +458,7 @@ const translations = {
 
     'send.error': '发送失败',
     'send.errorInfo': '请刷新钱包后重试',
+    'send.errorTxid': '交易ID为空',
 
     'qr.title': '扫描二维码',
     'qr.error': '未检测到摄像头设备',
@@ -515,7 +515,7 @@ const translations = {
     'common.contactSupport': '联系我们',
     'common.contactSupportDesc': '遇到问题可以在GitHub上进行提交和在Telegram群中进行留言。',
     'common.contactSupportGitHub': 'GitHub项目',
-    'common.contactSupportTwitter':'开发者推特',
+    'common.contactSupportTwitter': '开发者推特',
 
     'safety.instructions': `
     <section>
@@ -746,6 +746,7 @@ const translations = {
 
     'send.error': 'Отправка не удалась',
     'send.errorInfo': 'Пожалуйста, попробуйте еще раз',
+    'send.errorTxid': 'ID транзакции пуст',
 
     'qr.title': 'Сканировать QR-код',
     'qr.error': 'Не удалось найти камеру',
@@ -759,12 +760,10 @@ const translations = {
     'qr.loading': 'Загрузка...',
     'qr.retry': 'Повторить',
 
-    'send.successScan': "Сканирование успешное",
-    'send.successScanDesc': "Адрес был автоматически вставлен",
-    'send.errorScan': "Сканирование не удалось",
-    'send.errorScanDesc': "Адрес в QR-коде имеет неправильный формат",
-
-
+    'send.successScan': 'Сканирование успешное',
+    'send.successScanDesc': 'Адрес был автоматически вставлен',
+    'send.errorScan': 'Сканирование не удалось',
+    'send.errorScanDesc': 'Адрес в QR-коде имеет неправильный формат',
 
     'receive.title': 'Получить',
     'receive.to': 'Получить на',

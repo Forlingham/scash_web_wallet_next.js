@@ -6,6 +6,7 @@ import { bech32 } from 'bech32'
 import * as bitcoin from 'bitcoinjs-lib'
 import { Unspent } from './api'
 import { BIP32Interface } from 'bip32'
+import pkg from '../package.json'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -15,7 +16,7 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export const VERSION = '1.1'
+export const VERSION = pkg.version
 
 export const NAME_TOKEN = 'SCASH'
 
@@ -31,8 +32,8 @@ export const SCASH_NETWORK = {
   wif: 0x80
 }
 
-export const explorerUrl1 = 'https://scash.one/'
-export const explorerUrl2 = 'https://scash.tv/'
+export const explorerUrl1 = 'https://explorer.scash.network/'
+export const explorerUrl2 = 'https://explorer.scash.network/'
 
 export function onOpenExplorer(network: string, type: string, id: string) {
   if (network === '1') {

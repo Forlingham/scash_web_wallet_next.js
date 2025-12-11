@@ -3,14 +3,7 @@ import axiosTool from './axiosReq'
 // 防抖相关
 const debounceTimers = new Map<string, NodeJS.Timeout>()
 
-// 记录创建的地址,用于统计使用app人数
-export function onUserCreateApi(address: string) {
-  return axiosTool.post('/rpc/onUserCreate', {
-    address
-  })
-}
-
-export interface BlockchainInfo {
+export interface GetblockchaininfoRPC {
   chain: string
   blocks: number
   headers: number
@@ -24,14 +17,13 @@ export interface BlockchainInfo {
   size_on_disk: number
   pruned: boolean
   warnings: string
-  coinPrice: string
 }
 /**
  * 获取区块链信息
  * @param debounceMs 防抖延迟时间，默认300ms
  * @returns 区块链信息
  */
-export function getBlockchainInfoApi(debounceMs: number = 300): Promise<ApiData<RpcRes<BlockchainInfo>>> {
+export function getBlockchainInfoApi(debounceMs: number = 300): Promise<ApiData<RpcRes<GetblockchaininfoRPC>>> {
   const key = 'getblockchaininfo'
 
   return new Promise((resolve, reject) => {
@@ -41,9 +33,9 @@ export function getBlockchainInfoApi(debounceMs: number = 300): Promise<ApiData<
     }
 
     // 设置新的防抖定时器
-    const timer = setTimeout(async () => {
+    setTimeout(async () => {
       try {
-        const result = await axiosTool.post<RpcRes<BlockchainInfo>>('/rpc/getblockchaininfo', {})
+        const result = await axiosTool.get<RpcRes<GetblockchaininfoRPC>>('/getblockchaininfo', {})
         debounceTimers.delete(key)
         resolve(result)
       } catch (error) {
@@ -51,8 +43,6 @@ export function getBlockchainInfoApi(debounceMs: number = 300): Promise<ApiData<
         reject(error)
       }
     }, debounceMs)
-
-    debounceTimers.set(key, timer)
   })
 }
 
@@ -96,7 +86,7 @@ export function getScantxoutsetApi(address: string, debounceMs: number = 300): P
     // 设置新的防抖定时器
     const timer = setTimeout(async () => {
       try {
-        const result = await axiosTool.post<RpcRes<Scantxoutset>>('/rpc/scantxoutset', {
+        const result = await axiosTool.get<RpcRes<Scantxoutset>>('/scantxoutset', {
           address
         })
         debounceTimers.delete(key)
@@ -132,7 +122,7 @@ export function getBaseFeeApi(confTarget: number = 6, debounceMs: number = 300):
     // 设置新的防抖定时器
     const timer = setTimeout(async () => {
       try {
-        const result = await axiosTool.post<RpcRes<BaseFee>>('/rpc/estimatesmartfee', {
+        const result = await axiosTool.get<RpcRes<BaseFee>>('/estimatesmartfee', {
           confTarget
         })
         debounceTimers.delete(key)
@@ -172,7 +162,7 @@ export function getRawTransactionApi(txid: string, debounceMs: number = 300): Pr
     const timer = setTimeout(async () => {
       try {
         // 创建实际的API请求
-        const result = await axiosTool.post<RpcRes<RawTransaction>>('/rpc/getrawtransaction', {
+        const result = await axiosTool.get<RpcRes<RawTransaction>>('/getrawtransaction', {
           txid
         })
 
@@ -191,25 +181,7 @@ export function getRawTransactionApi(txid: string, debounceMs: number = 300): Pr
   })
 }
 
-// export class SendRawTransactionDto {
-//   @IsNotEmpty()
-//   @Length(45, 45)
-//   address: string
-//   txid: string
-//   @IsNotEmpty()
-//   @Length(100, 10000)
-//   rawtx: string
-//   @IsNotEmpty()
-//   totalInput: number
-//   @IsNotEmpty()
-//   totalOutput: number
-//   @IsNotEmpty()
-//   change: number
-//   @IsNotEmpty()
-//   feeRate: number
-//   @IsNotEmpty()
-//   appFee: number
-// }
+
 
 type SendRawTransactionDto = {
   address: string
@@ -231,7 +203,7 @@ export function onBroadcastApi(
   sendRawTransactionDto: SendRawTransactionDto,
   debounceMs: number = 300
 ): Promise<ApiData<RpcRes<{ txid: string }>>> {
-  const key = `broadcast_${sendRawTransactionDto.rawtx.slice(0, 20)}`
+  const key = `sendrawtransaction_${sendRawTransactionDto.rawtx.slice(0, 20)}`
 
   return new Promise((resolve, reject) => {
     // 清除之前的定时器
@@ -242,7 +214,7 @@ export function onBroadcastApi(
     // 设置新的防抖定时器
     const timer = setTimeout(async () => {
       try {
-        const result = await axiosTool.post<RpcRes<{ txid: string }>>('/rpc/broadcast', sendRawTransactionDto)
+        const result = await axiosTool.post<RpcRes<{ txid: string }>>('/sendrawtransaction', sendRawTransactionDto)
         debounceTimers.delete(key)
         resolve(result)
       } catch (error) {
@@ -252,5 +224,29 @@ export function onBroadcastApi(
     }, debounceMs)
 
     debounceTimers.set(key, timer)
+  })
+}
+
+// 获取币价
+export function getCoinPriceApi(debounceMs: number = 300): Promise<ApiData<RpcRes<{ price: number }>>> {
+  return new Promise((resolve, reject) => {
+    // 清除之前的定时器
+    if (debounceTimers.has('coinPrice')) {
+      clearTimeout(debounceTimers.get('coinPrice')!)
+    }
+
+    // 设置新的防抖定时器
+    const timer = setTimeout(async () => {
+      try {
+        const result = await axiosTool.get<RpcRes<{ price: number }>>('/coin-price')
+        debounceTimers.delete('coinPrice')
+        resolve(result)
+      } catch (error) {
+        debounceTimers.delete('coinPrice')
+        reject(error)
+      }
+    }, debounceMs)
+
+    debounceTimers.set('coinPrice', timer)
   })
 }
