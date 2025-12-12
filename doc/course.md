@@ -17,7 +17,7 @@
     `https://github.com/Forlingham/scash_web_wallet_next.js`
 
 2.  找到页面右上角的 **Fork** 按钮，点击它。这一步是把代码复制一份到你的账号下。
-![图片描述](doc/img/fork.png)
+![图片描述](img/fork.png)
 3.  在弹出的页面直接点绿色的 **Create fork**。稍等几秒，页面会自动跳转，当你看到左上角是你的用户名时，说明代码“搬运”成功了。
 
 ---
@@ -29,13 +29,13 @@
 2.  在控制台首页，点击 **Add New ...** 然后选择 **Project**（或者直接点中间的 Import Project）。
 ![图片描述](img/import.png)
 3.  在左侧选择 **Continue with GitHub**。
-![图片描述](doc/img/continue.png)
+![图片描述](img/continue.png)
 
 1.  如果是第一次用，会弹出一个授权框，点击绿色的 **Authorize Vercel**。
-![图片描述](doc/img/authorize.png)
+![图片描述](img/authorize.png)
 
 2.  授权完成后，你能在列表里看到刚才 Fork 的 `scash_web_wallet_next.js` 项目。点击右侧黑色的 **Import** 按钮。
-![图片描述](doc/img/import2.png)
+![图片描述](img/import2.png)
 
 ---
 
@@ -55,7 +55,7 @@
 * **Value (右边填)**: `http://IP地址:端口|用户名|密码`
     * *注意：中间的竖线 `|` 是分隔符，千万不要加空格！*
 
-![图片描述](doc/img/env.png)
+![图片描述](img/env.png)
 
 **3. 开始部署：**
 确认两行变量都添加进去后，点击页面最底部的 **Deploy** 按钮。
@@ -65,16 +65,16 @@
 ## 第四步：等待并访问
 
 1.  点击部署后，会进入加载页面，这时候只要耐心等待（大约 1 分钟）。
-![图片描述](doc/img/loading.png)
+![图片描述](img/loading.png)
 
 1.  当屏幕上出现“Congratulations!”或者显示出网页预览图时，说明成功了！点击 **Continue to Dashboard**。
-![图片描述](doc/img/complete.png)
+![图片描述](img/complete.png)
 
 2.  在项目主页，点击 **Domains** 下面那个以 `.vercel.app` 结尾的链接。
-![图片描述](doc/img/domain.png)
+![图片描述](img/domain.png)
 
 3.  恭喜！你现在应该能看到钱包的紫色界面了。
-![图片描述](doc/img/wallet.png)
+![图片描述](img/wallet.png)
 
 
 ---
