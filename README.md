@@ -87,5 +87,13 @@ npm run dev
 ## 贡献
 欢迎通过 Issue 与 Pull Request 参与贡献，一起完善 SCASH 钱包。
 
+## 支持项目开发
+- 如果你愿意支持本项目的持续开发与维护，欢迎捐助：
+- BTC：`bc1qnvdrxs23t6ejuxjs6mswx7cez2rn80wrwjd0u8`
+- BNB：`0xD4dB57B007Ad386C2fC4d7DD146f5977c039Fefc`
+- USDT（BEP-20）：`0xD4dB57B007Ad386C2fC4d7DD146f5977c039Fefc`
+- SCASH：`scash1qy48v7frkutlthqq7uqs8lk5fam24tghjdxqtf5`
+- 你的支持将用于开源维护与基础设施建设，感谢你为 SCASH 社区的建设与创新助力。
+
 ## 许可证
 本项目采用 [MIT License](./LICENSE) 开源许可。
