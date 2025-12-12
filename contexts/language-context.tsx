@@ -217,7 +217,7 @@ const translations = {
     'filter.all': 'All',
     'filter.received': 'Received',
     'filter.sent': 'Sent',
-
+    'settings.installPlugin': 'Install Chrome Plugin',
     'common.supportAuthor': 'Support the author',
     'common.supportAuthorDesc':
       'Your donations not only support the developer but also serve as a driving force for new features, contributing to the growth of the SCASH community.',
@@ -506,7 +506,7 @@ const translations = {
     'filter.all': '全部',
     'filter.received': '已收到',
     'filter.sent': '已发送',
-
+    'settings.installPlugin': '安装 Chrome 插件',
     'common.supportAuthor': '支持作者',
     'common.supportAuthorDesc': '大家的捐赠不仅是对作者的支持，更是推动新功能开发的动力，为 SCASH 社区的发展贡献一份力量。',
     'common.copySuccess': '复制成功',
@@ -794,7 +794,7 @@ const translations = {
     'filter.all': 'Все',
     'filter.received': 'Получено',
     'filter.sent': 'Отправлено',
-
+    'settings.installPlugin': 'Установить расширение Chrome',
     'common.supportAuthor': 'Поддержать автора',
     'common.supportAuthorDesc':
       'Ваши пожертвования не только поддерживают разработчика, но и становятся движущей силой для создания новых функций, внося вклад в развитие сообщества SCASH.',
