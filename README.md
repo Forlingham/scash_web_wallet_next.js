@@ -1,71 +1,91 @@
 
 
-# 🪙 SCASH Wallet
+# 🪙 SCASH Wallet（中文说明）
 
-An open-source lightweight wallet for the **SCASH blockchain**, designed with **security** and **usability** in mind.
-All private keys, mnemonics, and signing operations are performed **locally on the client side**, never transmitted over the network.
+面向 SCASH 社区的开源轻量级 Web 钱包，强调安全与易用性。所有助记词、私钥与签名操作均在用户本地设备完成，不会上传到网络。
 
-## ✨ Features
+## 功能特性
+- 地址管理：生成/导入助记词，BIP32/BIP84 路径推导，Bech32 地址校验
+- 余额与交易：查询 UTXO/余额，本地构建与签名，节点广播，自动找零
+- 安全优先：本地 AES 加密钱包文件，密码不出端，支持离线签名
+- 技术栈：前端 Next.js，后端（独立部署）Nest.js + Prisma，区块链交互基于 SCASH RPC
 
-* 🔑 **Address Management**
+## 架构与实现
+- 前端
+  - 使用 `Next.js` 构建，Zustand 持久化存储仅保存加密后的钱包文件与必要状态
+  - 助记词生成与地址推导：`bip39` + `bip32` + `tiny-secp256k1`，路径为 `m/84'/0'/0'/0/0`
+  - 地址格式：`bitcoinjs-lib` 生成 P2WPKH（Bech32，前缀 `scash`）
+  - 交易签名：`bitcoinjs-lib` 的 `Psbt` 在本地完成输入签名与最终原始交易生成
+- 后端（可选、独立部署）
+  - 基于 `Nest.js` 提供 SCASH RPC 代理与业务接口（如余额、估算手续费、广播交易）
+  - 使用 `Prisma` 进行轻量数据访问（如价格缓存等，不存储用户私钥）
+- 区块链交互
+  - 余额与 UTXO：`/scantxoutset` 拉取并在前端状态中标注可用性
+  - 手续费估算：`/estimatesmartfee` 获取 `feerate`，结合交易体积估算最终费用
+  - 广播：仅发送原始交易 `RawTx` 到节点或后端代理
 
-  * Generate and import mnemonics
-  * Derive addresses using BIP32 / BIP84 paths
-  * Strict address format validation
+## 核心流程
+- 创建钱包
+  - 生成 12 词助记词并推导首个地址（P2WPKH）
+  - 使用用户密码的 MD5 派生值作为密钥，AES 加密钱包明文（助记词、路径、地址、WIF）
+  - 生成可下载的钱包文件 `scash-wallet.json`（包含版本、时间戳与加密数据）
+- 恢复钱包
+  - 上传此前下载的加密钱包文件
+  - 输入密码本地解密，恢复地址与签名能力
+- 构建与签名
+  - 从 UTXO 构建 `Psbt`，添加目标输出与（可选）应用服务费输出
+  - 根据估算手续费与输入/输出差额自动添加找零到本人地址
+  - 本地签名并提取原始交易十六进制文本用于广播
 
-* 💰 **Balance & Transactions**
+## 安全设计
+- 私钥不出本地
+  - 助记词与私钥只在前端内存中使用；持久化仅保存 AES 加密后的钱包文件
+  - 解密与签名均在用户设备本地进行，后端与节点从不接触私钥
+- 本地加密存储
+  - 使用 `CryptoJS AES` 加密钱包明文，IV 为固定标识字符串，密钥为 `MD5(password, 'password')` 的派生值
+  - 加密数据以十六进制编码后写入 `scash-wallet.json`，便于备份与离线保存
+- 离线签名
+  - 可在无网络环境下完成交易签名，网络仅用于广播 `RawTx` 与查询必要链上数据
+- 输入校验与格式验证
+  - 地址校验函数确保 Bech32 前缀与数据长度合法，降低误转风险
+- 状态持久化最小化
+  - Zustand 仅持久化必要非敏感状态与加密后的钱包数据，避免明文敏感信息落地
 
-  * Query balances and UTXOs by address
-  * Build and sign transactions locally
-  * Broadcast signed transactions via RPC node
-  * Change outputs handled automatically
+## 风险与最佳实践
+- 设备安全
+  - 若设备被恶意软件控制，任何软件钱包都可能受影响；建议使用强密码、为钱包文件做好离线备份并保管
+- 浏览器环境
+  - 避免在不可信网页环境中操作钱包；谨防钓鱼链接与恶意脚本注入
+- 密码策略
+  - 使用 8 位以上的强密码；修改密码时重新加密并下载新钱包文件
+- 文件备份
+  - 妥善备份 `scash-wallet.json`；建议离线存储，切勿上传到云盘或邮件
 
-* 🔒 **Security First**
-
-  * AES-encrypted local wallet files
-  * Password-protected storage (never sent over the network)
-  * Signing process can be performed **offline**, similar to hardware wallets
-
-* ⚡ **Tech Stack**
-
-  * **Frontend**: Next.js (React)
-  * **Backend**: Nest.js + Prisma
-  * **Blockchain Communication**: SCASH RPC
-  * **Encryption**: AES for wallet storage
-
-## 🚀 Getting Started
+## 快速开始
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/scash-wallet.git
-cd scash-wallet
-
-# Install dependencies
+# 安装依赖
 npm install
 
-# Run development server
+# 配置环境变量（本地 .env 或 Vercel 项目环境变量）
+# 必填：为每个节点单独配置凭据（逗号分隔，每项格式 url|user|password）
+BITCOIN_RPC_ENDPOINTS=http://your-ip:8332|your-user|your-password,http://your-ip2:8332|your-user2|your-password2
+# 可选：请求超时毫秒数（默认 8000）
+BITCOIN_RPC_TIMEOUT_MS=8000
+
+# 启动开发环境
 npm run dev
 ```
 
-## 📖 Usage
+<a href="./doc/course.md"><img src="https://img.shields.io/badge/部署文档-点击查看-7B2EFF?style=for-the-badge" alt="查看部署文档" /></a>
 
-1. Create or import a wallet using mnemonic.
-2. Query balances and transactions by address.
-3. Construct and sign transactions **locally** (no private keys ever leave the device).
-4. Broadcast signed transactions via your own SCASH node.
+## 使用指南
+- 创建或导入钱包，生成加密钱包文件并下载保存
+- 查询余额与交易记录，准备收款/转账所需信息
+- 在发送页面构建并本地签名交易，确认后广播
 
-## 🛡️ Security Model
+## 贡献
+欢迎通过 Issue 与 Pull Request 参与贡献，一起完善 SCASH 钱包。
 
-* Wallet files are stored locally and encrypted with AES.
-* User password is required for decryption and **never transmitted**.
-* Signing happens locally or offline — similar to how hardware wallets work via Bluetooth or USB.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to open issues or submit pull requests to help improve the SCASH Wallet.
-
-## 📜 License
-
-This project is released under the [MIT License](./LICENSE).
-
-
+## 许可证
+本项目采用 [MIT License](./LICENSE) 开源许可。
