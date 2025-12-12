@@ -27,7 +27,7 @@
 1.  打开 [Vercel 官网](https://vercel.com/) 并登录。
 
 2.  在控制台首页，点击 **Add New ...** 然后选择 **Project**（或者直接点中间的 Import Project）。
-![图片描述](doc/img/import.png)
+![图片描述](img/import.png)
 3.  在左侧选择 **Continue with GitHub**。
 ![图片描述](doc/img/continue.png)
 
