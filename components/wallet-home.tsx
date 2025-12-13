@@ -129,7 +129,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
         <div className="flex justify-between items-center p-4">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <img src="/logo.jpg" alt="SCASH Logo" className="w-10 h-10 rounded-full border-2 border-purple-400/50 shadow-lg" />
+              <img src="https://r2.scash.network/logo.png" alt="SCASH Logo" className="w-10 h-10 rounded-full border-2 border-purple-400/50 shadow-lg" />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
             </div>
             <div>
@@ -161,7 +161,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
         <Card className="relative bg-gradient-to-br from-purple-900/20 via-gray-800 to-purple-800/30 border-purple-500/30 backdrop-blur-sm overflow-hidden">
           {/* 硬币logo背景 */}
           <div className="absolute top-0 right-0 w-20 h-20 opacity-10">
-            <img src="/logo.png" alt="Coin Logo" className="w-full h-full object-contain filter brightness-150" />
+            <img src="https://r2.scash.network/logo.png" alt="Coin Logo" className="w-full h-full object-contain filter brightness-150" />
           </div>
 
           <CardContent className="px-6 py-5 relative z-10">

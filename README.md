@@ -4,6 +4,18 @@
 
 面向 SCASH 社区的开源轻量级 Web 钱包，强调安全与易用性。所有助记词、私钥与签名操作均在用户本地设备完成，不会上传到网络。
 
+<p>
+  <img src="https://img.shields.io/badge/SCASH%20Wallet-2.0.1-8A2BE2?style=for-the-badge" alt="SCASH Wallet 版本" />
+  <img src="https://img.shields.io/badge/Next.js-15.2.6-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 15.2.6" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript 5.x" />
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-4.1-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4.1" />
+  
+</p>
+
+## 部署文档
+<a href="./doc/SCASH_Web_Wallet_Vercel_Deployment_Guide.md"><img src="https://img.shields.io/badge/一键部署到vercel文档-点击查看-7B2EFF?style=for-the-badge" alt="查看部署文档" /></a>
+
 ## 功能特性
 - 地址管理：生成/导入助记词，BIP32/BIP84 路径推导，Bech32 地址校验
 - 余额与交易：查询 UTXO/余额，本地构建与签名，节点广播，自动找零
@@ -77,7 +89,6 @@ BITCOIN_RPC_TIMEOUT_MS=8000
 npm run dev
 ```
 
-<a href="./doc/course.md"><img src="https://img.shields.io/badge/部署文档-点击查看-7B2EFF?style=for-the-badge" alt="查看部署文档" /></a>
 
 ## 使用指南
 - 创建或导入钱包，生成加密钱包文件并下载保存

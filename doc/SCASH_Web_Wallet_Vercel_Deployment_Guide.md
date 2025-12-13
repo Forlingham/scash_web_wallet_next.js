@@ -7,8 +7,8 @@
 ## 准备工作
 * 一个 GitHub 账号（用于存放代码）
 * 一个 Vercel 账号（用于免费建站）
-* 准备好你的节点信息（IP、端口、账号、密码）
-
+* 准备好你的RPC节点信息（IP、端口、账号、密码）
+<a href="./SCASH_Core_RPC_Node_Setup_Guide.md"><img src="https://img.shields.io/badge/查看RPC节点设置-点击查看-7B2EFF?style=for-the-badge" alt="查看部署文档" /></a>
 ---
 
 ## 第一步：把代码“搬”到你家 (Fork)

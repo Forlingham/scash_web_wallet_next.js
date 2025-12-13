@@ -312,7 +312,7 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
       {/* Header with Language Selector */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center gap-3">
-          <img src="/logo.jpg" alt="SCASH Logo" className="w-8 h-8 rounded-full" />
+          <img src="https://r2.scash.network/logo.png" alt="SCASH Logo" className="w-8 h-8 rounded-full" />
           <h1 className="text-xl font-semibold text-white">{t('wallet.title')}</h1>
         </div>
         <LanguageSelector />
@@ -323,7 +323,7 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
         <Card className="w-full max-w-md bg-gray-800 border-gray-700">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
-              <img src="/logo.jpg" alt="SCASH Logo" className="w-16 h-16 rounded-full mx-auto" />
+              <img src="https://r2.scash.network/logo.png" alt="SCASH Logo" className="w-16 h-16 rounded-full mx-auto" />
             </div>
             <CardTitle className="text-2xl text-white">{t('wallet.title')}</CardTitle>
           </CardHeader>

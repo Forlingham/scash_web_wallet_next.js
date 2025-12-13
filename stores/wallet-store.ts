@@ -297,25 +297,25 @@ export const useWalletStore = create<WalletState>()(
           return {
             isSuccess: false,
             status: 'error',
-            fee: 0
+            fee: 0.00030049
           }
         } catch (error) {
           console.log('获取基础交易手续费 错误：', error)
           return {
             isSuccess: false,
             status: 'error',
-            fee: 0
+            fee: 0.00030049
           }
         }
       },
 
       // 定时跟新数据的一些方法
       unSetUpdate: () => {
-        setTimeout(() => {
-          get().setUpdateBlockchaininfo()
-          get().setUpdateBalance()
-          get().setUpdateCoinPrice()
-        }, 10 * 1000)
+        // setTimeout(() => {
+        //   get().setUpdateBlockchaininfo()
+        //   get().setUpdateBalance()
+        //   get().setUpdateCoinPrice()
+        // }, 10 * 1000)
       },
 
       // 获取当前节点状态
@@ -335,8 +335,8 @@ export const useWalletStore = create<WalletState>()(
 
       // 获取币价
       setUpdateCoinPrice: async () => {
-        console.log(233);
-        
+        console.log(233)
+
         try {
           const res = await getCoinPriceApi()
           if (res.data.success) {

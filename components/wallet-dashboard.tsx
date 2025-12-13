@@ -36,7 +36,7 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
     initGetWalletInfo()
     const interval = setInterval(() => {
       initGetWalletInfo()
-    }, 1000 * 22)
+    }, 1000 * 52)
     return () => clearInterval(interval)
   }, [])
 

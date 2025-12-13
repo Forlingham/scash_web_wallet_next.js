@@ -28,7 +28,7 @@ export function WalletLockScreen({ onUnlock }: { onUnlock: (password: string) =>
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <img
-            src="/logo.jpg"
+            src="https://r2.scash.network/logo.png"
             alt="SCASH Logo"
             className="w-16 h-16 rounded-full mx-auto mb-4"
           />

@@ -23,7 +23,7 @@ export interface GetblockchaininfoRPC {
  * @param debounceMs 防抖延迟时间，默认300ms
  * @returns 区块链信息
  */
-export function getBlockchainInfoApi(debounceMs: number = 300): Promise<ApiData<RpcRes<GetblockchaininfoRPC>>> {
+export function getBlockchainInfoApi(debounceMs: number = 500): Promise<ApiData<RpcRes<GetblockchaininfoRPC>>> {
   const key = 'getblockchaininfo'
 
   return new Promise((resolve, reject) => {
