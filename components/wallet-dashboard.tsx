@@ -9,8 +9,8 @@ import { WalletSend } from '@/components/wallet-send'
 import { WalletSettings } from '@/components/wallet-settings'
 import { useLanguage } from '@/contexts/language-context'
 import { useWalletActions, useWalletState } from '@/stores/wallet-store'
-import { ArrowLeft } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowLeft, Coins, ArrowUpRight } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 interface WalletDashboardProps {
   onLogout: () => void
@@ -32,12 +32,80 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
     }
   }
 
+  const updateGetWalletInfo = async () => {
+    await setUpdateBalance()
+    if (pendingTransactions.length) {
+      setUpdateBalanceByMemPool()
+    }
+  }
+
+  const walletPollIntervalRef = useRef<number | null>(null)
+  const chainPollIntervalRef = useRef<number | null>(null)
+  const idleTimeoutRef = useRef<number | null>(null)
+  const isIdleRef = useRef<boolean>(false)
+
+  const startPolling = () => {
+    if (walletPollIntervalRef.current == null) {
+      walletPollIntervalRef.current = window.setInterval(() => {
+        updateGetWalletInfo()
+      }, 1000 * 50)
+    }
+    if (chainPollIntervalRef.current == null) {
+      chainPollIntervalRef.current = window.setInterval(() => {
+        setUpdateBlockchaininfo()
+      }, 1000 * 60 * 3)
+    }
+  }
+
+  const stopPolling = () => {
+    if (walletPollIntervalRef.current != null) {
+      clearInterval(walletPollIntervalRef.current)
+      walletPollIntervalRef.current = null
+    }
+    if (chainPollIntervalRef.current != null) {
+      clearInterval(chainPollIntervalRef.current)
+      chainPollIntervalRef.current = null
+    }
+  }
+
+  const resetIdleTimer = () => {
+    if (idleTimeoutRef.current != null) {
+      clearTimeout(idleTimeoutRef.current)
+    }
+    idleTimeoutRef.current = window.setTimeout(() => {
+      isIdleRef.current = true
+      stopPolling()
+    }, 1000 * 60 * 4)
+  }
+
+  const handleActivity = () => {
+    if (isIdleRef.current) {
+      updateGetWalletInfo()
+      setUpdateBlockchaininfo()
+      startPolling()
+    }
+    isIdleRef.current = false
+    resetIdleTimer()
+  }
+
   useEffect(() => {
     initGetWalletInfo()
-    const interval = setInterval(() => {
-      initGetWalletInfo()
-    }, 1000 * 52)
-    return () => clearInterval(interval)
+    startPolling()
+    resetIdleTimer()
+    window.addEventListener('click', handleActivity, { passive: true })
+    window.addEventListener('scroll', handleActivity, { passive: true })
+    window.addEventListener('keydown', handleActivity)
+    window.addEventListener('touchstart', handleActivity, { passive: true })
+    return () => {
+      stopPolling()
+      if (idleTimeoutRef.current != null) {
+        clearTimeout(idleTimeoutRef.current)
+      }
+      window.removeEventListener('click', handleActivity)
+      window.removeEventListener('scroll', handleActivity)
+      window.removeEventListener('keydown', handleActivity)
+      window.removeEventListener('touchstart', handleActivity)
+    }
   }, [])
 
   const handleNavigation = (view: string) => {
@@ -69,10 +137,46 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
         return (
           <div className="flex-1 flex items-center justify-center p-4">
             <div className="text-center">
-              <h2 className="text-xl font-semibold text-white mb-2">
-                {currentView.charAt(0).toUpperCase() + currentView.slice(1)} Feature
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                交易所
               </h2>
-              <p className="text-gray-400 mb-4">This feature will be implemented soon.</p>
+              <p className="text-gray-400 mb-6">选择一个交易所开始交易 SCASH/USDT</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-xl mx-auto mb-6">
+                <a
+                  href="https://www.bit.com/spot?pair=SCASH-USDT"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group rounded-xl border border-purple-500/30 bg-gray-800/40 p-4 shadow-sm hover:shadow-xl hover:border-purple-400/50 transition-all hover:-translate-y-0.5"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-md bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center">
+                      <Coins className="h-5 w-5 text-purple-200" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="text-white font-semibold">bit.com</div>
+                      <div className="text-xs text-gray-400">SCASH/USDT</div>
+                    </div>
+                    <ArrowUpRight className="h-4 w-4 text-purple-300 group-hover:text-purple-200" />
+                  </div>
+                </a>
+                <a
+                  href="https://www.ourbit.com/zh-CN/exchange/SCASH_USDT"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group rounded-xl border border-purple-500/30 bg-gray-800/40 p-4 shadow-sm hover:shadow-xl hover:border-purple-400/50 transition-all hover:-translate-y-0.5"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-md bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center">
+                      <Coins className="h-5 w-5 text-purple-200" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="text-white font-semibold">ourbit</div>
+                      <div className="text-xs text-gray-400">SCASH/USDT</div>
+                    </div>
+                    <ArrowUpRight className="h-4 w-4 text-purple-300 group-hover:text-purple-200" />
+                  </div>
+                </a>
+              </div>
               <Button
                 onClick={() => handleNavigation('home')}
                 variant="outline"
