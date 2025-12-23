@@ -208,7 +208,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     // 计算需要多少个输入才能满足发送的金额
     let pickAmount = new Decimal(0)
     const pickUnspentsArr: Unspent[] = []
-    console.log(unspent, 'unspent')
+    // console.log(unspent, 'unspent')
 
     for (const unspentItem of unspent) {
       if (unspentItem.isHasMemPool || !unspentItem.isUsable) {
@@ -411,7 +411,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         appFee: signTransactionResult.appFee
       })
 
-      if (!res.data.success && res.data.error) {
+      if (res.data.error) {
         toast({
           title: '错误码:' + res.data.error.error.code,
           description: res.data.error.error.message,
@@ -454,8 +454,18 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         description: t('send.broadcast'),
         variant: 'success'
       })
-    } catch (error) {
-      console.log(error)
+    } catch (error: any) {
+      console.log(error, 'error')
+
+      if (error?.data?.data.success === false) {
+        toast({
+          title: t('send.error') + ': 500',
+          description: error?.data?.message || t('send.errorInfo'),
+          variant: 'destructive'
+        })
+        return
+      }
+
       toast({
         title: t('send.error'),
         description: t('send.errorInfo'),

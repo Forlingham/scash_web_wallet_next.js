@@ -362,7 +362,7 @@ export const useWalletStore = create<WalletState>()(
             const currentHeight = resData.height
 
             // 计算可用余额
-            const unspents = resData.unspents
+            const unspents = resData.unspents.sort((a, b) => a.height - b.height)
             for (const unspent of unspents) {
               unspent.isHasMemPool = false
               // 判断是不是自己的找零交易

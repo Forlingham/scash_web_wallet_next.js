@@ -12,6 +12,11 @@ export async function GET(req: Request) {
   }
   try {
     const res = await callBitcoinRpc<any>('estimatesmartfee', [Number(confTarget)])
+    if (res?.errors) {
+      const status = 201
+      const message = res?.errors?.[0] ?? '内部错误'
+      return apiErr(status, message)
+    }
     const message = '获取智能手续费成功'
     const code = 200
     return apiOk(res, code, message)

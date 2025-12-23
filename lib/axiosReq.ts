@@ -88,7 +88,6 @@ export class AxiosTool {
         const response = await this.instance.request(config)
         resolve(response.data)
       } catch (error: any) {
-        if (error?.data?.code === 500) console.error('Not connected to an available node')
         if (process.env.NODE_ENV === 'development') {
           console.log(error.data)
         }
