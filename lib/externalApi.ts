@@ -1,6 +1,7 @@
 import axios from 'axios'
+import { analyzeTransaction } from './utils'
 
-const baseUrl = '/ext'
+const baseUrl = 'https://explorer.scash.network/api/explorer'
 
 const axiosTool = axios.create({
   baseURL: baseUrl,
@@ -53,17 +54,16 @@ function debounceThrottle<T extends (...args: any[]) => Promise<any>>(fn: T, deb
   }) as T
 }
 
-///ext/getaddresstxs/scash1qk9exxence0p6f5yqp2w73cjugyejnqxmzjvdv6/0/50/internal
-export interface AddressTxsExt {
-  data: (number | string)[][] // 时间 tX  收到金额  发送金额  余额
-  recordsTotal: number
-  recordsFiltered: number
-}
 /**
  * 获取地址交易记录（原始函数）
  */
-const _getAddressTxsExtApi = (address: string, page: number = 0, pageSize: number = 20) => {
-  return axiosTool.get<AddressTxsExt>(`/getaddresstxs/${address}/${page}/${pageSize}/internal`)
+const _getAddressTxsExtApi = async (address: string) => {
+  const res = await axiosTool.get<PageType<TransactionType> & AddressTransactionsType>(`/address/${address}/txs`)
+  const transactions = res.data.list
+
+  const analyzedTransactions = transactions.map((tx) => analyzeTransaction(tx, address))
+
+  return analyzedTransactions
 }
 
 /**

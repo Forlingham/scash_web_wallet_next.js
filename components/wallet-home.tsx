@@ -7,7 +7,7 @@ import { useLanguage } from '@/contexts/language-context'
 import { ArrowDown, ArrowUp, ArrowUpDown, Menu, Bell, Settings, Clock, X, Database } from 'lucide-react'
 import { calcValue, NAME_TOKEN, onOpenExplorer } from '@/lib/utils'
 import { PendingTransaction, Transaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
-import { AddressTxsExt, getAddressTxsExtApi } from '@/lib/externalApi'
+import { getAddressTxsExtApi } from '@/lib/externalApi'
 import Decimal from 'decimal.js'
 import { getRawTransactionApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
@@ -30,40 +30,41 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
     try {
       setGetAddressTxsLoading(true)
       const res = await getAddressTxsExtApi(wallet.address)
-      if (!res.data.data) return
+      if (!res.length) return
 
-      for (const tx of res.data.data.reverse()) {
+      for (const tx of res.reverse()) {
         let txInfo: Transaction
-        const unspentTx = unspent.find((item) => item.txid === tx[1])
-        const type = tx[3] ? 'send' : 'receive'
+        const unspentTx = unspent.find((item) => item.txid === tx.txid)
+        const type = ['income', 'mining'].includes(tx.type) ? 'receive' : 'send'
         let amount = 0
         if (type === 'send') {
-          amount = new Decimal(tx[3]).minus(tx[2]).toNumber()
+          amount = new Decimal(tx.netAmount).toNumber()
           amount = amount * -1
         } else {
-          amount = tx[2] as number
+          amount = tx.netAmount
         }
         if (unspentTx) {
           txInfo = {
-            id: tx[1] as string,
+            id: tx.txid,
             type: type,
             amount: amount,
             address: '',
-            timestamp: tx[0] as number,
+            timestamp: new Date(tx.timestamp).getTime() ,
             status: unspentTx.isUsable ? 'confirmed' : 'pending',
             height: unspentTx.height
           }
         } else {
           txInfo = {
-            id: tx[1] as string,
+            id: tx.txid,
             type: type,
             amount: amount,
             address: '',
-            timestamp: tx[0] as number,
+            timestamp: new Date(tx.timestamp).getTime() ,
             status: 'confirmed',
             height: 0
           }
         }
+
         addTransaction(txInfo)
       }
     } catch (error) {
@@ -129,7 +130,11 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
         <div className="flex justify-between items-center p-4">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <img src="https://r2.scash.network/logo.png" alt="SCASH Logo" className="w-10 h-10 rounded-full border-2 border-purple-400/50 shadow-lg" />
+              <img
+                src="https://r2.scash.network/logo.png"
+                alt="SCASH Logo"
+                className="w-10 h-10 rounded-full border-2 border-purple-400/50 shadow-lg"
+              />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
             </div>
             <div>
@@ -410,7 +415,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                   <div className="flex items-center justify-between border-t border-gray-700 mt-2">
                     <div>
                       {/* 交易时间，时间戳转换成 月、日  时分秒 */}
-                      <span className="text-gray-400 text-sm">{new Date(tx.timestamp * 1000).toLocaleString()}</span>
+                      <span className="text-gray-400 text-sm">{new Date(tx.timestamp).toLocaleString()}</span>
                       {tx.status === 'pending' && (
                         <span className="text-orange-500 text-xs ml-5 whitespace-nowrap">
                           {t('transactions.confirmations')}: {confirmations} / {blockchainInfo.headers - tx.height}

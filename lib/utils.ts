@@ -346,3 +346,69 @@ export function signTransaction(
     appFee
   }
 }
+
+export const analyzeTransaction = (tx: TransactionType, currentAddress: string) => {
+  // 计算当前地址在所有输入中的总金额
+  const totalInput = tx.senders
+    .filter((sender) => sender.address === currentAddress)
+    .reduce((sum, sender) => sum.plus(new Decimal(sender.amount)), new Decimal(0))
+
+  // 计算当前地址在所有输出中的总金额
+  const totalOutput = tx.receivers
+    .filter((receiver) => receiver.address === currentAddress)
+    .reduce((sum, receiver) => sum.plus(new Decimal(receiver.amount)), new Decimal(0))
+
+  // 计算当前地址在找零输出中的总金额
+  const totalChange = tx.changeOutputs
+    .filter((change) => change.address === currentAddress)
+    .reduce((sum, change) => sum.plus(new Decimal(change.amount)), new Decimal(0))
+
+  // 判断交易类型
+  const isCoinbase = tx.senders.length === 0 // 挖矿交易
+  const isSender = totalInput.gt(0)
+  const isReceiver = totalOutput.gt(0)
+
+  let type: 'income' | 'expense' | 'self' | 'mining'
+  let amount = new Decimal(0)
+  let netAmount = new Decimal(0)
+
+  if (isCoinbase && isReceiver) {
+    // 挖矿奖励 - 只有输出没有输入
+    type = 'mining'
+    netAmount = totalOutput
+    amount = totalOutput
+  } else if (isSender && totalChange && isReceiver) {
+    // 自己发给自己 - 有输入也有输出
+    type = 'self'
+    // 净变化 = 总输出 - 总输入（找零已经包含在总输出中）
+    netAmount = totalOutput.minus(totalInput)
+    amount = netAmount.abs()
+  } else if (isSender) {
+    // 只有输入没有输出 - 支出交易
+    type = 'expense'
+    // 净变化 = -总输入 - 找零
+    netAmount = totalInput.minus(totalChange).negated()
+    amount = totalInput.minus(totalChange)
+  } else if (isReceiver) {
+    // 只有输出没有输入 - 收入交易
+    type = 'income'
+    // 净变化 = 总输出
+    netAmount = totalOutput
+    amount = totalOutput
+  } else {
+    // 不相关交易，理论上不应该发生
+    type = 'self'
+    netAmount = new Decimal(0)
+    amount = new Decimal(0)
+  }
+
+  return {
+    type,
+    amount: satToScash(amount.toNumber()),
+    netAmount: satToScash(netAmount.abs().toNumber()),
+    isPositive: netAmount.gte(0),
+    txid: tx.txid,
+    timestamp: tx.timestamp,
+    confirmations: tx.confirmations
+  }
+}

@@ -34,3 +34,26 @@ interface SendList {
   address: string
   amount: string
 }
+
+interface PageType<T> {
+  list: T[]
+  pagination: Pagination
+}
+
+interface TransactionType {
+  txid: string
+  blockHeight: number
+  size: number
+  weight: number
+  senders: Sender[]
+  receivers: Sender[]
+  changeOutputs: any[]
+  totalAmount: number
+  fee: number
+  timestamp: string
+  confirmations: number
+}
+
+interface AddressTransactionsType {
+  address: string
+}
