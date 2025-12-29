@@ -182,6 +182,7 @@ const translations = {
     'qr.cancel': 'Cancel',
     'qr.loading': 'Loading...',
     'qr.retry': 'Retry',
+    'qr.upload': 'Upload Image',
 
     'send.successScan': 'Scanning Successful',
     'send.successScanDesc': 'Address was automatically inserted',
@@ -471,6 +472,7 @@ const translations = {
     'qr.cancel': '取消',
     'qr.loading': '正在启动摄像头...',
     'qr.retry': '重试',
+    'qr.upload': '上传图片',
 
     'send.successScan': '扫描成功',
     'send.successScanDesc': '地址已自动填入',
@@ -759,6 +761,7 @@ const translations = {
     'qr.cancel': 'Отмена',
     'qr.loading': 'Загрузка...',
     'qr.retry': 'Повторить',
+    'qr.upload': 'Загрузить изображение',
 
     'send.successScan': 'Сканирование успешное',
     'send.successScanDesc': 'Адрес был автоматически вставлен',

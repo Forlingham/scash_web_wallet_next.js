@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import QrScanner from 'qr-scanner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { X, Camera, CameraOff, RefreshCw } from 'lucide-react'
+import { X, Camera, CameraOff, RefreshCw, Image as ImageIcon } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 
 interface QRScannerProps {
@@ -19,6 +19,7 @@ export function QRScannerComponent({ isOpen, onClose, onScanResult }: QRScannerP
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // 添加状态ref来获取最新状态值
   const isScanningRef = useRef(false)
@@ -398,6 +399,42 @@ export function QRScannerComponent({ isOpen, onClose, onScanResult }: QRScannerP
     }
   }, [startScanning, t])
 
+  // 处理文件上传
+  const handleFileUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (!file) return
+
+      try {
+        // 清理之前的错误
+        setError('')
+
+        // 使用QrScanner解析图片文件
+        const result = await QrScanner.scanImage(file, {
+          returnDetailedScanResult: true
+        })
+
+        if (result && result.data) {
+          onScanResult(result.data)
+          onClose()
+        }
+      } catch (e) {
+        onScanResult('')
+        onClose()
+      } finally {
+        // 重置input值，以便可以再次选择同一文件
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      }
+    },
+    [onScanResult, onClose, t]
+  )
+
+  const triggerFileUpload = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
+
   // 关闭扫描器
   const handleClose = useCallback(() => {
     // 停止扫描
@@ -572,30 +609,38 @@ export function QRScannerComponent({ isOpen, onClose, onScanResult }: QRScannerP
             </div>
 
             {/* 控制按钮 */}
-            {hasCamera && (
+            <div className="flex flex-col gap-3">
               <div className="flex gap-2">
-                <Button
-                  onClick={toggleScanning}
-                  disabled={isInitializing}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50"
-                >
-                  {isScanning ? (
-                    <>
-                      <CameraOff className="h-4 w-4 mr-2" />
-                      {t('qr.stopScanning')}
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="h-4 w-4 mr-2" />
-                      {t('qr.startScanning')}
-                    </>
-                  )}
-                </Button>
-                <Button onClick={handleClose} variant="outline" className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800">
-                  {t('qr.cancel')}
+                {hasCamera && (
+                  <Button
+                    onClick={toggleScanning}
+                    disabled={isInitializing}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50"
+                  >
+                    {isScanning ? (
+                      <>
+                        <CameraOff className="h-4 w-4 mr-2" />
+                        {t('qr.stopScanning')}
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-4 w-4 mr-2" />
+                        {t('qr.startScanning')}
+                      </>
+                    )}
+                  </Button>
+                )}
+                <Button onClick={triggerFileUpload} variant="outline" className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800">
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  {t('qr.upload')}
                 </Button>
               </div>
-            )}
+              <Button onClick={handleClose} variant="ghost" className="w-full text-gray-400 hover:text-white">
+                {t('qr.cancel')}
+              </Button>
+            </div>
+
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
           </div>
         </CardContent>
       </Card>
