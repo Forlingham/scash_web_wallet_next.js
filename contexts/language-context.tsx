@@ -922,12 +922,31 @@ const translations = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
+// 检测浏览器语言
+function detectBrowserLanguage(): 'en' | 'zh' | 'ru' {
+  if (typeof window === 'undefined') return 'en'
+  
+  const browserLang = navigator.language.toLowerCase()
+  
+  // 支持的语言映射
+  if (browserLang.startsWith('zh')) {
+    return 'zh'
+  } else if (browserLang.startsWith('ru')) {
+    return 'ru'
+  } else {
+    return 'en' // 默认英文
+  }
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const language = useLanguageStore((state) => state.language)
+  const hasManuallySet = useLanguageStore((state) => state.hasManuallySet)
   const setLanguage = useLanguageStore((state) => state.setLanguage)
 
   const t = (key: string): string => {
-    return translations[language][key as keyof (typeof translations)['en']] || key
+    // 获取当前语言：如果用户手动设置过，使用设置的语言；否则自动检测浏览器语言
+    const currentLang = hasManuallySet ? language : detectBrowserLanguage()
+    return translations[currentLang][key as keyof (typeof translations)['en']] || key
   }
 
   return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>
