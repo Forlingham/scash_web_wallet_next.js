@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic' // 禁止静态缓存
 
 export async function GET() {
   try {
-    const res = await callBitcoinRpc<any>('getblockchaininfo')
+    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('getblockchaininfo')
     const message = '获取区块链信息成功'
     const code = 200
-    return apiOk(res, code, message)
+    return apiOk(result, code, message, { endpoint, responseTime })
   } catch (err: any) {
     const status = err?.statusCode ?? 500
     const message = err?.message ?? '内部错误'

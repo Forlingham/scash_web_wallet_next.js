@@ -285,7 +285,15 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
   }
 
   const handleRestoreFromMnemonic = () => {
-    if (generatedMnemonic.split(' ').length !== 12) {
+    // 清理助记词：去除前后空格，将换行符和多个空格替换为单个空格，然后分割
+    const cleanedMnemonic = generatedMnemonic
+      .trim()
+      .replace(/\s+/g, ' ') // 将所有连续空白字符（包括换行符、制表符等）替换为单个空格
+      .toLowerCase() // 转换为小写以确保一致性
+    
+    const words = cleanedMnemonic.split(' ').filter(word => word.length > 0)
+    
+    if (words.length !== 12) {
       toast({
         title: 'Invalid Mnemonic',
         description: 'Please enter a valid 12-word mnemonic phrase.',
@@ -294,6 +302,8 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
       return
     }
 
+    // 更新为清理后的助记词
+    setGeneratedMnemonic(words.join(' '))
     setStep('set-password')
   }
 

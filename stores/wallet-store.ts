@@ -61,6 +61,12 @@ interface WalletState {
   confirmations: number
   // 基础交易手续费
   baseFee: number
+  // 节点连接信息
+  nodeInfo: {
+    endpoint: string
+    responseTime: number
+    status: 'connected' | 'disconnected' | 'checking'
+  }
 
   // Actions - 类似 Pinia 的 actions
   setWallet: (wallet: WalletInfo) => void
@@ -136,6 +142,12 @@ export const useWalletStore = create<WalletState>()(
       coinPrice: '0',
       confirmations: 1,
       baseFee: 0,
+      // 节点连接信息初始状态
+      nodeInfo: {
+        endpoint: '',
+        responseTime: 0,
+        status: 'checking'
+      },
 
       // Actions
       setWallet: (wallet: WalletInfo) => {
@@ -326,10 +338,22 @@ export const useWalletStore = create<WalletState>()(
           if (res.data.success) {
             set((state) => {
               state.blockchainInfo = res.data.rpcData
+              // 更新节点连接信息
+              if (res.data.nodeInfo) {
+                state.nodeInfo = {
+                  endpoint: res.data.nodeInfo.endpoint,
+                  responseTime: res.data.nodeInfo.responseTime,
+                  status: 'connected'
+                }
+              }
             })
           }
         } catch (error) {
           console.log('获取当前节点状态 错误：', error)
+          // 设置节点连接失败状态
+          set((state) => {
+            state.nodeInfo.status = 'disconnected'
+          })
         }
       },
 
@@ -498,6 +522,7 @@ export const useWalletState = () => {
   const isLoading = useWalletStore((state) => state.isLoading)
   const error = useWalletStore((state) => state.error)
   const isLocked = useWalletStore((state) => state.isLocked)
+  const nodeInfo = useWalletStore((state) => state.nodeInfo) // 添加节点信息
   // const recentTransactions = useWalletStore((state) => state.getRecentTransactions())
   // const formattedBalance = useWalletStore((state) => state.getFormattedBalance())
   // const isConnected = useWalletStore((state) => state.isWalletConnected())
@@ -513,7 +538,8 @@ export const useWalletState = () => {
     isInitialized,
     isLoading,
     error,
-    isLocked
+    isLocked,
+    nodeInfo // 导出节点信息
     // recentTransactions,
     // formattedBalance,
     // isConnected

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useLanguage } from '@/contexts/language-context'
-import { ArrowDown, ArrowUp, ArrowUpDown, Menu, Bell, Settings, Clock, X, Database } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Menu, Bell, Settings, Clock, X, Database, Wifi, WifiOff } from 'lucide-react'
 import { calcValue, NAME_TOKEN, onOpenExplorer } from '@/lib/utils'
 import { PendingTransaction, Transaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
 import { getAddressTxsExtApi } from '@/lib/externalApi'
@@ -17,19 +17,32 @@ interface WalletHomeProps {
 }
 
 export function WalletHome({ onNavigate }: WalletHomeProps) {
-  const { wallet, coinPrice, unspent, transactions, pendingTransactions, blockchainInfo, confirmations, isLocked } = useWalletState()
+  const { wallet, coinPrice, unspent, transactions, pendingTransactions, blockchainInfo, confirmations, isLocked, nodeInfo } = useWalletState()
   const { addTransaction, addPendingTransaction, lockWallet } = useWalletActions()
   const { t } = useLanguage()
   const { toast } = useToast()
   const [selectedPeriod, setSelectedPeriod] = useState('30D')
   const [getAddressTxsLoading, setGetAddressTxsLoading] = useState<boolean>(false)
+  const [explorerConnectionStatus, setExplorerConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking')
+  const [explorerResponseTime, setExplorerResponseTime] = useState<number>(0) // 响应时间（毫秒）
 
   async function getTxs() {
     if (!wallet.address) return
     if (getAddressTxsLoading) return
+    
+    const startTime = Date.now() // 记录开始时间
+    
     try {
       setGetAddressTxsLoading(true)
+      setExplorerConnectionStatus('checking')
+      
       const res = await getAddressTxsExtApi(wallet.address)
+      
+      // 计算响应时间
+      const responseTime = Date.now() - startTime
+      setExplorerResponseTime(responseTime)
+      setExplorerConnectionStatus('connected')
+      
       if (!res.length) return
 
       for (const tx of res.reverse()) {
@@ -69,8 +82,54 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
       }
     } catch (error) {
       console.log(error, 'error')
+      setExplorerConnectionStatus('disconnected')
     } finally {
       setGetAddressTxsLoading(false)
+    }
+  }
+
+  // 根据响应时间获取信号强度和颜色
+  const getSignalStrength = () => {
+    if (explorerConnectionStatus === 'disconnected') {
+      return { strength: 0, color: 'text-red-500', bars: 0, label: '断开连接' }
+    }
+    if (explorerConnectionStatus === 'checking') {
+      return { strength: 0, color: 'text-yellow-500', bars: 0, label: '检查中...' }
+    }
+    
+    // 根据响应时间判断信号质量
+    // < 500ms: 极好 (3格)
+    // 500-1500ms: 良好 (2格)
+    // 1500-3000ms: 一般 (1格)
+    // > 3000ms: 较差 (1格，黄色)
+    if (explorerResponseTime < 500) {
+      return { strength: 3, color: 'text-green-500', bars: 3, label: `极好 (${explorerResponseTime}ms)` }
+    } else if (explorerResponseTime < 1500) {
+      return { strength: 2, color: 'text-green-400', bars: 2, label: `良好 (${explorerResponseTime}ms)` }
+    } else if (explorerResponseTime < 3000) {
+      return { strength: 1, color: 'text-yellow-500', bars: 1, label: `一般 (${explorerResponseTime}ms)` }
+    } else {
+      return { strength: 1, color: 'text-orange-500', bars: 1, label: `较慢 (${explorerResponseTime}ms)` }
+    }
+  }
+
+  // 节点信号强度计算
+  const getNodeSignalStrength = () => {
+    if (nodeInfo.status === 'disconnected') {
+      return { strength: 0, color: 'text-red-500', bars: 0, label: '断开连接' }
+    }
+    if (nodeInfo.status === 'checking') {
+      return { strength: 0, color: 'text-yellow-500', bars: 0, label: '检查中...' }
+    }
+    
+    if (nodeInfo.responseTime < 500) {
+      return { strength: 3, color: 'text-green-500', bars: 3, label: `极好 (${nodeInfo.responseTime}ms)` }
+    } else if (nodeInfo.responseTime < 1500) {
+      return { strength: 2, color: 'text-green-400', bars: 2, label: `良好 (${nodeInfo.responseTime}ms)` }
+    } else if (nodeInfo.responseTime < 3000) {
+      return { strength: 1, color: 'text-yellow-500', bars: 1, label: `一般 (${nodeInfo.responseTime}ms)` }
+    } else {
+      return { strength: 1, color: 'text-orange-500', bars: 1, label: `较慢 (${nodeInfo.responseTime}ms)` }
     }
   }
 
@@ -164,6 +223,52 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
       {/* Main Content with top padding for fixed header */}
       <div className="pt-20 flex-1 p-4 space-y-4 overflow-y-auto mt-10">
         <Card className="relative bg-gradient-to-br from-purple-900/20 via-gray-800 to-purple-800/30 border-purple-500/30 backdrop-blur-sm overflow-hidden">
+          {/* 节点连接状态栏 */}
+          <CardContent className="px-6 pt-3 pb-0">
+            <div className="flex items-center gap-2 pb-2">
+              <div className="relative group">
+                {nodeInfo.status === 'disconnected' && (
+                  <WifiOff className="h-3.5 w-3.5 text-red-500" />
+                )}
+                
+                {nodeInfo.status === 'checking' && (
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-yellow-500/30 border-t-yellow-500"></div>
+                )}
+                
+                {nodeInfo.status === 'connected' && (
+                  <div className="flex items-end gap-0.5">
+                    {/* 信号强度条 */}
+                    {[1, 2, 3].map((bar) => (
+                      <div
+                        key={bar}
+                        className={`w-1 rounded-sm transition-all ${
+                          bar <= getNodeSignalStrength().bars
+                            ? getNodeSignalStrength().color.replace('text-', 'bg-')
+                            : 'bg-gray-600'
+                        }`}
+                        style={{ height: `${bar * 3.5}px` }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 状态文字提示 - 直接显示在信号后面 */}
+              {nodeInfo.status === 'disconnected' && (
+                <span className="text-xs text-red-400">无法连接到节点</span>
+              )}
+              {nodeInfo.status === 'checking' && (
+                <span className="text-xs text-yellow-400">正在连接节点...</span>
+              )}
+              {nodeInfo.status === 'connected' && (
+                <span className="text-xs text-gray-400">
+                  节点: <span className={getNodeSignalStrength().color}>{getNodeSignalStrength().label}</span>
+                  <span className="text-gray-500 ml-1">({nodeInfo.endpoint})</span>
+                </span>
+              )}
+            </div>
+          </CardContent>
+
           {/* 硬币logo背景 */}
           <div className="absolute top-0 right-0 w-20 h-20 opacity-10">
             <img src="https://r2.scash.network/logo.png" alt="Coin Logo" className="w-full h-full object-contain filter brightness-150" />
@@ -294,18 +399,53 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
         </Card> */}
 
         {/* Recent Transactions */}
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-gray-800 border-gray-700 pt-0">
           <CardContent className="px-4">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center">
-                <h3 className="text-white font-medium">{t('transactions.recent')}</h3>
-                {/* getAddressTxsLoading */}
-                {getAddressTxsLoading && (
-                  <div className="ml-4">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            {/* 状态栏 - 区块浏览器连接状态 */}
+            <div className="flex items-center gap-2 pt-3 pb-2">
+              <div className="relative group">
+                {explorerConnectionStatus === 'disconnected' && (
+                  <WifiOff className="h-3.5 w-3.5 text-red-500" />
+                )}
+                
+                {explorerConnectionStatus === 'checking' && (
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-yellow-500/30 border-t-yellow-500"></div>
+                )}
+                
+                {explorerConnectionStatus === 'connected' && (
+                  <div className="flex items-end gap-0.5">
+                    {/* 信号强度条 */}
+                    {[1, 2, 3].map((bar) => (
+                      <div
+                        key={bar}
+                        className={`w-1 rounded-sm transition-all ${
+                          bar <= getSignalStrength().bars
+                            ? getSignalStrength().color.replace('text-', 'bg-')
+                            : 'bg-gray-600'
+                        }`}
+                        style={{ height: `${bar * 3.5}px` }}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
+
+              {/* 状态文字提示 - 直接显示在信号后面 */}
+              {explorerConnectionStatus === 'disconnected' && (
+                <span className="text-xs text-red-400">无法连接到区块浏览器</span>
+              )}
+              {explorerConnectionStatus === 'checking' && (
+                <span className="text-xs text-yellow-400">正在连接区块浏览器...</span>
+              )}
+              {explorerConnectionStatus === 'connected' && (
+                <span className="text-xs text-gray-400">
+                  区块浏览器: <span className={getSignalStrength().color}>{getSignalStrength().label}</span>
+                </span>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white font-medium">{t('transactions.recent')}</h3>
 
               <Button
                 variant="ghost"

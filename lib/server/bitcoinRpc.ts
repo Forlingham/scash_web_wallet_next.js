@@ -43,7 +43,7 @@ export async function callBitcoinRpc<T>(
   method: string,
   params: unknown[] = [],
   overrideTimeoutMs?: number,
-): Promise<T> {
+): Promise<{ result: T; endpoint: string; responseTime: number }> {
   const { endpoints, timeoutMs } = getEnv();
   const finalTimeout = overrideTimeoutMs ?? timeoutMs;
 
@@ -51,6 +51,7 @@ export async function callBitcoinRpc<T>(
   const attempts: { url: string; message: string; statusCode?: number }[] = [];
 
   for (const ep of endpoints) {
+    const requestStartTime = Date.now(); // 记录请求开始时间
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), finalTimeout);
     try {
@@ -87,7 +88,12 @@ export async function callBitcoinRpc<T>(
       }
 
       clearTimeout(timer);
-      return json!.result as T;
+      const responseTime = Date.now() - requestStartTime; // 计算响应时间
+      return { 
+        result: json!.result as T,
+        endpoint: ep.url,
+        responseTime
+      };
     } catch (e: any) {
       clearTimeout(timer);
       // 超时或网络/HTTP错误，记录并尝试下一个节点；RPC错误不做故障转移

@@ -7,6 +7,10 @@ interface ApiData<T> {
 interface RpcRes<T> {
   success: boolean
   rpcData: T
+  nodeInfo?: {
+    endpoint: string
+    responseTime: number
+  }
   error?: {
     error: {
       code: number
