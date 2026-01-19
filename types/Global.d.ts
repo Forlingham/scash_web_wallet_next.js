@@ -56,6 +56,18 @@ interface TransactionType {
   fee: number
   timestamp: string
   confirmations: number
+  vouts?: TransactionVout[] // 添加输出信息
+}
+
+interface TransactionVout {
+  value: number
+  n: number
+  scriptPubKey?: {
+    hex?: string
+    address?: string
+    type?: string
+  }
+  addresses?: string[]
 }
 
 interface AddressTransactionsType {

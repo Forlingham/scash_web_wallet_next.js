@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useLanguage } from '@/contexts/language-context'
-import { ArrowDown, ArrowUp, ArrowUpDown, Menu, Bell, Settings, Clock, X, Database, Wifi, WifiOff } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Menu, Bell, Settings, Clock, X, Database, Wifi, WifiOff, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react'
 import { calcValue, NAME_TOKEN, onOpenExplorer } from '@/lib/utils'
 import { PendingTransaction, Transaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
 import { getAddressTxsExtApi } from '@/lib/externalApi'
+import { parseDapMessage, formatDapPreview, type DapMessage } from '@/lib/dap'
 import Decimal from 'decimal.js'
 import { getRawTransactionApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
@@ -25,6 +26,10 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
   const [getAddressTxsLoading, setGetAddressTxsLoading] = useState<boolean>(false)
   const [explorerConnectionStatus, setExplorerConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking')
   const [explorerResponseTime, setExplorerResponseTime] = useState<number>(0) // 响应时间（毫秒）
+  
+  // 存储每笔交易的 DAP 消息
+  const [dapMessages, setDapMessages] = useState<Map<string, DapMessage>>(new Map())
+  const [expandedTxId, setExpandedTxId] = useState<string | null>(null) // 展开的交易 ID
 
   async function getTxs() {
     if (!wallet.address) return
@@ -42,8 +47,27 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
       const responseTime = Date.now() - startTime
       setExplorerResponseTime(responseTime)
       setExplorerConnectionStatus('connected')
-      
+
       if (!res.length) return
+
+      // 解析 DAP 消息
+      const newDapMessages = new Map<string, DapMessage>()
+      
+      for (const tx of res) {
+        // 解析 DAP 消息（使用 rawTransaction 中的数据）
+        if (tx.rawTransaction) {
+          const outputs = tx.rawTransaction.vouts || tx.rawTransaction.receivers || []
+          const senderAddress = tx.rawTransaction.senders?.[0]?.address || ''
+          
+          const dapMessage = parseDapMessage(outputs, senderAddress, wallet.address)
+          if (dapMessage) {
+            newDapMessages.set(tx.txid, dapMessage)
+          }
+        }
+      }
+      
+      // 更新 DAP 消息
+      setDapMessages(newDapMessages)
 
       for (const tx of res.reverse()) {
         let txInfo: Transaction
@@ -505,7 +529,11 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                 </div>
               ))}
 
-              {transactions.map((tx) => (
+              {transactions.map((tx) => {
+                const dapMessage = dapMessages.get(tx.id)
+                const isExpanded = expandedTxId === tx.id
+                
+                return (
                 <div key={tx.id} className=" p-3 bg-gray-900 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors">
                   <div className="flex items-center justify-between ">
                     <div className="flex items-center gap-3">
@@ -550,7 +578,41 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-gray-700 mt-2">
+                  {/* DAP 消息显示 */}
+                  {dapMessage && (
+                    <div className="mt-3 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <MessageSquare className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-purple-300 text-xs font-medium mb-1">
+                            {dapMessage.isFromSelf 
+                              ? (dapMessage.isPureMessage ? t('dap.myNote') : t('dap.transferNote')) 
+                              : (dapMessage.isPureMessage ? t('dap.receivedNote') : t('dap.senderNote'))}
+                          </p>
+                          <p className="text-gray-300 text-sm break-words">
+                            {isExpanded ? dapMessage.content : formatDapPreview(dapMessage.content, 100)}
+                          </p>
+                          {dapMessage.content.length > 100 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setExpandedTxId(isExpanded ? null : tx.id)
+                              }}
+                              className="text-purple-400 text-xs hover:text-purple-300 mt-2 flex items-center gap-1"
+                            >
+                              {isExpanded ? (
+                                <><ChevronUp className="h-3 w-3" /> {t('dap.collapse')}</>
+                              ) : (
+                                <><ChevronDown className="h-3 w-3" /> {t('dap.expand')}</>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between border-t border-gray-700 mt-3">
                     <div>
                       {/* 交易时间，时间戳转换成 月、日  时分秒 */}
                       <span className="text-gray-400 text-sm">{new Date(tx.timestamp).toLocaleString()}</span>
@@ -573,7 +635,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                     </div>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </CardContent>
         </Card>

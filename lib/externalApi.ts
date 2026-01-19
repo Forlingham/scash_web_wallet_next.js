@@ -50,20 +50,27 @@ function debounceThrottle<T extends (...args: any[]) => Promise<any>>(fn: T, deb
       }, debounceMs)
 
       debounceTimers.set(key, timer)
-    })
+    }) as T
   }) as T
 }
 
 /**
- * 获取地址交易记录（原始函数）
+ * 获取地址交易记录（原始函数）- 返回完整数据用于 DAP 解析
  */
 const _getAddressTxsExtApi = async (address: string) => {
   const res = await axiosTool.get<PageType<TransactionType> & AddressTransactionsType>(`/address/${address}/txs`)
   const transactions = res.data.list
 
+  // 同时返回分析后的交易和原始交易数据（用于 DAP 解析）
   const analyzedTransactions = transactions.map((tx) => analyzeTransaction(tx, address))
+  
+  // 返回带原始数据的交易信息
+  const transactionsWithRaw = analyzedTransactions.map((analyzed, index) => ({
+    ...analyzed,
+    rawTransaction: transactions[index] // 保留原始交易数据，包含 vouts
+  }))
 
-  return analyzedTransactions
+  return transactionsWithRaw
 }
 
 /**
@@ -71,6 +78,6 @@ const _getAddressTxsExtApi = async (address: string) => {
  * @param address 地址
  * @param page 页码
  * @param pageSize 每页数量
- * @returns 地址交易记录
+ * @returns 地址交易记录（包含原始数据）
  */
 export const getAddressTxsExtApi = debounceThrottle(_getAddressTxsExtApi, 300, 30000)

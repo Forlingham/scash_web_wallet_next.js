@@ -102,6 +102,14 @@ const translations = {
     'explorer.status.checking': 'Connecting to block explorer...',
     'explorer.status.connected': 'Block Explorer',
 
+    // DAP Messages
+    'dap.myNote': 'My Note',
+    'dap.transferNote': 'Transfer Note',
+    'dap.receivedNote': 'Received Note',
+    'dap.senderNote': 'Sender Note',
+    'dap.expand': 'Expand to view full content',
+    'dap.collapse': 'Collapse',
+
     // Settings
     'settings.title': 'Settings',
     'settings.language': 'Language',
@@ -405,6 +413,14 @@ const translations = {
     'explorer.status.checking': '正在连接区块浏览器...',
     'explorer.status.connected': '区块浏览器',
 
+    // DAP Messages
+    'dap.myNote': '我留的言',
+    'dap.transferNote': '转账备注',
+    'dap.receivedNote': '收到的留言',
+    'dap.senderNote': '对方备注',
+    'dap.expand': '展开查看完整内容',
+    'dap.collapse': '收起',
+
     // Settings
     'settings.title': '设置',
     'settings.language': '语言',
@@ -707,6 +723,14 @@ const translations = {
     'explorer.status.disconnected': 'Не удалось подключиться к обозревателю блоков',
     'explorer.status.checking': 'Подключение к обозревателю блоков...',
     'explorer.status.connected': 'Обозреватель блоков',
+
+    // DAP Messages
+    'dap.myNote': 'Моя заметка',
+    'dap.transferNote': 'Примечание к переводу',
+    'dap.receivedNote': 'Полученное сообщение',
+    'dap.senderNote': 'Сообщение отправителя',
+    'dap.expand': 'Развернуть для просмотра полного текста',
+    'dap.collapse': 'Свернуть',
 
     // Settings
     'settings.title': 'Настройки',
