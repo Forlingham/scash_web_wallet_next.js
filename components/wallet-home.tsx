@@ -30,6 +30,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
   // 存储每笔交易的 DAP 消息
   const [dapMessages, setDapMessages] = useState<Map<string, DapMessage>>(new Map())
   const [expandedTxId, setExpandedTxId] = useState<string | null>(null) // 展开的交易 ID
+  const [isScrolled, setIsScrolled] = useState(false)
 
   async function getTxs() {
     if (!wallet.address) return
@@ -204,33 +205,67 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
     getTxs()
     getPendingTxs()
     onLoginExpired()
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [wallet.balance, unspent])
 
   return (
     <>
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-purple-500/30 shadow-lg">
-        <div className="flex justify-between items-center p-4">
-          <div className="flex items-center gap-3">
+      <div className={`fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md shadow-lg transition-all duration-300 ${
+        isScrolled ? 'py-2 border-transparent' : 'py-4 border-b border-purple-500/30'
+      }`}>
+        <div className={`flex justify-between items-center transition-all duration-300 ${
+          isScrolled ? 'px-3' : 'px-4'
+        }`}>
+          <div className={`flex items-center gap-3 transition-all duration-300 ${
+            isScrolled ? 'scale-90' : ''
+          }`}>
             <div className="relative">
               <img
                 src="https://r2.scash.network/logo.png"
                 alt="SCASH Logo"
-                className="w-10 h-10 rounded-full border-2 border-purple-400/50 shadow-lg"
+                className={`rounded-full border-2 border-purple-400/50 shadow-lg transition-all duration-300 ${
+                  isScrolled ? 'w-8 h-8' : 'w-10 h-10'
+                }`}
               />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse"></div>
+              <div className={`absolute -top-1 -right-1 bg-green-400 rounded-full border-2 border-gray-900 transition-all duration-300 ${
+                isScrolled ? 'w-2.5 h-2.5' : 'w-3 h-3'
+              }`}></div>
             </div>
-            <div>
+            <div className={`transition-all duration-300 ${
+              isScrolled ? 'opacity-0 hidden' : ''
+            }`}>
               <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 {t('wallet.title')}
               </h1>
               <div className="text-xs text-gray-400">{t('wallet.subtitle')}</div>
             </div>
+            <div className={`transition-all duration-300 ${
+              isScrolled ? 'opacity-100' : 'opacity-0 hidden'
+            }`}>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                SCASH Wallet
+              </h1>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg px-3 py-1.5">
-              <div className="text-purple-300 text-xs font-medium">{t('wallet.blockHeight')}</div>
-              <div className="text-white text-sm font-semibold">{blockchainInfo.headers.toLocaleString()}</div>
+          <div className={`flex items-center gap-3 transition-all duration-300 ${
+            isScrolled ? 'scale-90' : ''
+          }`}>
+            <div className={`bg-purple-500/10 border border-purple-500/20 rounded-lg transition-all duration-300 ${
+              isScrolled ? 'px-2 py-0.5' : 'px-3 py-1.5'
+            }`}>
+              <div className="text-purple-300 font-medium transition-all duration-300 ${
+                isScrolled ? 'text-[9px]' : 'text-xs'
+              }">{t('wallet.blockHeight')}</div>
+              <div className={`text-white font-semibold transition-all duration-300 ${
+                isScrolled ? 'text-[10px]' : 'text-sm'
+              }`}>{blockchainInfo.headers.toLocaleString()}</div>
             </div>
             <Button
               variant="ghost"
@@ -244,8 +279,32 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
         </div>
       </div>
 
+      {/* Simplified Balance - Shows when scrolled past balance card */}
+      <div className={`fixed top-[60px] left-0 right-0 z-40 bg-gray-900/98 backdrop-blur-md shadow-lg transition-all duration-300 ${
+        isScrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+      }`}>
+        <div className="px-4 py-2.5">
+          <div className="grid grid-cols-3 gap-3 text-xs">
+            <div className="bg-green-500/5 rounded-lg p-2 text-center">
+              <div className="text-green-400/80 font-medium text-[10px] uppercase tracking-wide">{t('wallet.available')}</div>
+              <div className="text-white font-semibold text-sm mt-0.5">{wallet.usableBalance}</div>
+            </div>
+            <div className="bg-orange-500/5 rounded-lg p-2 text-center">
+              <div className="text-orange-400/80 font-medium text-[10px] uppercase tracking-wide">{t('wallet.locked')}</div>
+              <div className="text-white font-semibold text-sm mt-0.5">{wallet.lockBalance}</div>
+            </div>
+            <div className="bg-blue-500/5 rounded-lg p-2 text-center">
+              <div className="text-blue-400/80 font-medium text-[10px] uppercase tracking-wide">{t('wallet.memPool')}</div>
+              <div className="text-white font-semibold text-sm mt-0.5">{wallet.memPoolLockBalance}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content with top padding for fixed header */}
-      <div className="pt-20 flex-1 p-4 space-y-4 overflow-y-auto mt-10">
+      <div className={`pt-20 flex-1 p-4 space-y-4 overflow-y-auto transition-all duration-300 ${
+        isScrolled ? 'mt-0' : 'mt-10'
+      }`}>
         <Card className="relative bg-gradient-to-br from-purple-900/20 via-gray-800 to-purple-800/30 border-purple-500/30 backdrop-blur-sm overflow-hidden">
           {/* 节点连接状态栏 - 浮动在左上角 */}
           <div className="absolute top-3 left-6 z-20 flex items-center gap-2">
@@ -260,7 +319,6 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
               
               {nodeInfo.status === 'connected' && (
                 <div className="flex items-end gap-0.5">
-                  {/* 信号强度条 */}
                   {[1, 2, 3].map((bar) => (
                     <div
                       key={bar}
@@ -276,7 +334,6 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
               )}
             </div>
 
-            {/* 状态文字提示 - 直接显示在信号后面 */}
             {nodeInfo.status === 'disconnected' && (
               <span className="text-xs text-red-400">{t('node.status.disconnected')}</span>
             )}
@@ -322,7 +379,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                     {wallet.balance.toString().includes('.') && (
                       <span className="text-2xl">.{wallet.balance.toString().split('.')[1]}</span>
                     )}
-                    <span className="absolute bottom-0  text-sm text-gray-400 font-normal">{NAME_TOKEN}</span>
+                    <span className="absolute bottom-0 text-sm text-gray-400 font-normal">{NAME_TOKEN}</span>
                   </span>
                 </div>
                 <div className="text-xl text-gray-300 font-medium">${calcValue(wallet.balance, coinPrice)} USD</div>
@@ -335,7 +392,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
           <div className="text-center">
             <Button
               size="lg"
-              className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gray-800 hover:bg-gray-700 border border-gray-600 touch-manipulation"
+              className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gray-800 hover:bg-gray-700 border border-gray-600 touch-manipulation transition-all duration-300 hover:scale-105"
               onClick={() => {
                 onNavigate('receive')
               }}
@@ -348,7 +405,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
           <div className="text-center">
             <Button
               size="lg"
-              className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gray-800 hover:bg-gray-700 border border-gray-600 touch-manipulation"
+              className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gray-800 hover:bg-gray-700 border border-gray-600 touch-manipulation transition-all duration-300 hover:scale-105"
               onClick={() => {
                 onNavigate('send')
               }}
@@ -361,7 +418,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
           <div className="text-center">
             <Button
               size="lg"
-              className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gray-800 hover:bg-gray-700 border border-gray-600 touch-manipulation"
+              className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gray-800 hover:bg-gray-700 border border-gray-600 touch-manipulation transition-all duration-300 hover:scale-105"
               onClick={() => {
                 onNavigate('trade')
               }}
@@ -371,54 +428,6 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
             <p className="text-xs sm:text-sm text-gray-300 mt-2">{t('action.trade')}</p>
           </div>
         </div>
-
-        {/* <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white font-medium">Ravencoin</h3>
-              <Button variant="ghost" size="sm" className="text-green-400 hover:text-green-300">
-                {t('transactions.seeAll')}
-              </Button>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-gray-400 text-sm">0.01 USD/RVN</p>
-            </div>
-
-   
-            <div className="flex gap-2 mb-4">
-              {['1H', '24H', '7D', '30D', '1Y'].map((period) => (
-                <Button
-                  key={period}
-                  variant={period === selectedPeriod ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setSelectedPeriod(period)}
-                  className={period === selectedPeriod ? 'bg-gray-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'}
-                >
-                  {period}
-                </Button>
-              ))}
-            </div>
-
-     
-            <div className="h-32 bg-gray-900 rounded-lg flex items-end justify-between p-4 relative overflow-hidden">
-              <div className="text-green-400 text-sm absolute top-4 left-4">$0.0163</div>
-              <div className="text-green-400 text-sm absolute bottom-4 right-4">$0.0130</div>
-
-           
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 300 120">
-                <path d="M20,80 Q50,60 80,70 T140,50 T200,65 T260,45 T300,55" stroke="#10b981" strokeWidth="2" fill="none" />
-                <path d="M20,80 Q50,60 80,70 T140,50 T200,65 T260,45 T300,55 L300,120 L20,120 Z" fill="url(#gradient)" opacity="0.3" />
-                <defs>
-                  <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-          </CardContent>
-        </Card> */}
 
         {/* Recent Transactions */}
         <Card className="bg-gray-800 border-gray-700 pt-0">
