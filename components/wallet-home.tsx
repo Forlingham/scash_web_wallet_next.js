@@ -223,51 +223,49 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
       {/* Main Content with top padding for fixed header */}
       <div className="pt-20 flex-1 p-4 space-y-4 overflow-y-auto mt-10">
         <Card className="relative bg-gradient-to-br from-purple-900/20 via-gray-800 to-purple-800/30 border-purple-500/30 backdrop-blur-sm overflow-hidden">
-          {/* 节点连接状态栏 */}
-          <CardContent className="px-6 pt-3 pb-0">
-            <div className="flex items-center gap-2 pb-2">
-              <div className="relative group">
-                {nodeInfo.status === 'disconnected' && (
-                  <WifiOff className="h-3.5 w-3.5 text-red-500" />
-                )}
-                
-                {nodeInfo.status === 'checking' && (
-                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-yellow-500/30 border-t-yellow-500"></div>
-                )}
-                
-                {nodeInfo.status === 'connected' && (
-                  <div className="flex items-end gap-0.5">
-                    {/* 信号强度条 */}
-                    {[1, 2, 3].map((bar) => (
-                      <div
-                        key={bar}
-                        className={`w-1 rounded-sm transition-all ${
-                          bar <= getNodeSignalStrength().bars
-                            ? getNodeSignalStrength().color.replace('text-', 'bg-')
-                            : 'bg-gray-600'
-                        }`}
-                        style={{ height: `${bar * 3.5}px` }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 状态文字提示 - 直接显示在信号后面 */}
+          {/* 节点连接状态栏 - 浮动在左上角 */}
+          <div className="absolute top-3 left-6 z-20 flex items-center gap-2">
+            <div className="relative group">
               {nodeInfo.status === 'disconnected' && (
-                <span className="text-xs text-red-400">无法连接到节点</span>
+                <WifiOff className="h-3.5 w-3.5 text-red-500" />
               )}
+              
               {nodeInfo.status === 'checking' && (
-                <span className="text-xs text-yellow-400">正在连接节点...</span>
+                <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-yellow-500/30 border-t-yellow-500"></div>
               )}
+              
               {nodeInfo.status === 'connected' && (
-                <span className="text-xs text-gray-400">
-                  节点: <span className={getNodeSignalStrength().color}>{getNodeSignalStrength().label}</span>
-                  <span className="text-gray-500 ml-1">({nodeInfo.endpoint})</span>
-                </span>
+                <div className="flex items-end gap-0.5">
+                  {/* 信号强度条 */}
+                  {[1, 2, 3].map((bar) => (
+                    <div
+                      key={bar}
+                      className={`w-1 rounded-sm transition-all ${
+                        bar <= getNodeSignalStrength().bars
+                          ? getNodeSignalStrength().color.replace('text-', 'bg-')
+                          : 'bg-gray-600'
+                      }`}
+                      style={{ height: `${bar * 3.5}px` }}
+                    />
+                  ))}
+                </div>
               )}
             </div>
-          </CardContent>
+
+            {/* 状态文字提示 - 直接显示在信号后面 */}
+            {nodeInfo.status === 'disconnected' && (
+              <span className="text-xs text-red-400">无法连接到节点</span>
+            )}
+            {nodeInfo.status === 'checking' && (
+              <span className="text-xs text-yellow-400">正在连接节点...</span>
+            )}
+            {nodeInfo.status === 'connected' && (
+              <span className="text-xs text-gray-400">
+                节点: <span className={getNodeSignalStrength().color}>{getNodeSignalStrength().label}</span>
+                <span className="text-gray-500 ml-1">({nodeInfo.endpoint})</span>
+              </span>
+            )}
+          </div>
 
           {/* 硬币logo背景 */}
           <div className="absolute top-0 right-0 w-20 h-20 opacity-10">
