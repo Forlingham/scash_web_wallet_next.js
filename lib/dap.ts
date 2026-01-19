@@ -55,6 +55,29 @@ export function isDapAddress(address: string): boolean {
   return dap.getProtocolType(address) !== null
 }
 
+// 安全清理 DAP 内容（防止 XSS 攻击）
+// ⚠️ 重要：链上数据是公开的，可能包含恶意代码
+function sanitizeDapContent(content: string): string {
+  if (typeof window === 'undefined') return content
+  
+  try {
+    // 使用 DOMPurify 清理 HTML，只保留纯文本
+    // ALLOWED_TAGS 为空数组表示不允许任何 HTML 标签
+    // ALLOWED_ATTR 为空数组表示不允许任何属性
+    const DOMPurify = require('dompurify')
+    return DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: [], // 不允许任何 HTML 标签
+      ALLOWED_ATTR: [], // 不允许任何属性
+      ALLOW_DATA_ATTR: false,
+    })
+  } catch (error) {
+    // 如果 DOMPurify 失败，使用纯文本处理作为后备
+    const div = document.createElement('div')
+    div.textContent = content
+    return div.innerText || content
+  }
+}
+
 // 解析交易中的 DAP 消息
 export function parseDapMessage(
   outputs: TransactionOutput[],
@@ -101,8 +124,11 @@ export function parseDapMessage(
     // 判断是否是自己发送的
     const isFromSelf = senderAddress.toLowerCase() === currentUserAddress.toLowerCase()
 
+    // ⚠️ 重要：对内容进行 XSS 清理
+    const sanitizedContent = sanitizeDapContent(message)
+
     return {
-      content: message,
+      content: sanitizedContent,
       isDap: true,
       isPureMessage,
       isFromSelf
@@ -113,9 +139,11 @@ export function parseDapMessage(
   }
 }
 
-// 格式化 DAP 消息显示
+// 格式化 DAP 消息显示（不进行 HTML 解析，直接显示纯文本）
 export function formatDapPreview(message: string, maxLength: number = 50): string {
   if (!message) return ''
-  if (message.length <= maxLength) return message
-  return message.substring(0, maxLength) + '...'
+  // 确保 message 是纯文本，不包含任何 HTML
+  const sanitized = sanitizeDapContent(message)
+  if (sanitized.length <= maxLength) return sanitized
+  return sanitized.substring(0, maxLength) + '...'
 }
