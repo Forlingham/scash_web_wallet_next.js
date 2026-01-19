@@ -89,6 +89,19 @@ const translations = {
     'transactions.particulars': 'View Details',
     'transactions.confirmations': 'Confirm',
 
+    // Node & Explorer Connection Status
+    'node.status.disconnected': 'Unable to connect to node',
+    'node.status.checking': 'Connecting to node...',
+    'node.status.connected': 'Node',
+    'node.signal.excellent': 'Excellent',
+    'node.signal.good': 'Good',
+    'node.signal.fair': 'Fair',
+    'node.signal.slow': 'Slow',
+    'node.signal.disconnected': 'Disconnected',
+    'explorer.status.disconnected': 'Unable to connect to block explorer',
+    'explorer.status.checking': 'Connecting to block explorer...',
+    'explorer.status.connected': 'Block Explorer',
+
     // Settings
     'settings.title': 'Settings',
     'settings.language': 'Language',
@@ -379,6 +392,19 @@ const translations = {
     'transactions.particulars': '查看详情',
     'transactions.confirmations': '确认数',
 
+    // Node & Explorer Connection Status
+    'node.status.disconnected': '无法连接到节点',
+    'node.status.checking': '正在连接节点...',
+    'node.status.connected': '节点',
+    'node.signal.excellent': '极好',
+    'node.signal.good': '良好',
+    'node.signal.fair': '一般',
+    'node.signal.slow': '较慢',
+    'node.signal.disconnected': '断开连接',
+    'explorer.status.disconnected': '无法连接到区块浏览器',
+    'explorer.status.checking': '正在连接区块浏览器...',
+    'explorer.status.connected': '区块浏览器',
+
     // Settings
     'settings.title': '设置',
     'settings.language': '语言',
@@ -668,6 +694,19 @@ const translations = {
     'transactions.memPool': 'Пул транзакций',
     'transactions.particulars': 'Показать детали',
     'transactions.confirmations': 'Подтверждения',
+
+    // Node & Explorer Connection Status
+    'node.status.disconnected': 'Не удалось подключиться к узлу',
+    'node.status.checking': 'Подключение к узлу...',
+    'node.status.connected': 'Узел',
+    'node.signal.excellent': 'Отлично',
+    'node.signal.good': 'Хорошо',
+    'node.signal.fair': 'Нормально',
+    'node.signal.slow': 'Медленно',
+    'node.signal.disconnected': 'Отключено',
+    'explorer.status.disconnected': 'Не удалось подключиться к обозревателю блоков',
+    'explorer.status.checking': 'Подключение к обозревателю блоков...',
+    'explorer.status.connected': 'Обозреватель блоков',
 
     // Settings
     'settings.title': 'Настройки',

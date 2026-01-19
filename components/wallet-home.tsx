@@ -91,10 +91,10 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
   // 根据响应时间获取信号强度和颜色
   const getSignalStrength = () => {
     if (explorerConnectionStatus === 'disconnected') {
-      return { strength: 0, color: 'text-red-500', bars: 0, label: '断开连接' }
+      return { strength: 0, color: 'text-red-500', bars: 0, label: t('node.signal.disconnected') }
     }
     if (explorerConnectionStatus === 'checking') {
-      return { strength: 0, color: 'text-yellow-500', bars: 0, label: '检查中...' }
+      return { strength: 0, color: 'text-yellow-500', bars: 0, label: t('explorer.status.checking') }
     }
     
     // 根据响应时间判断信号质量
@@ -103,33 +103,33 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
     // 1500-3000ms: 一般 (1格)
     // > 3000ms: 较差 (1格，黄色)
     if (explorerResponseTime < 500) {
-      return { strength: 3, color: 'text-green-500', bars: 3, label: `极好 (${explorerResponseTime}ms)` }
+      return { strength: 3, color: 'text-green-500', bars: 3, label: `${t('node.signal.excellent')} (${explorerResponseTime}ms)` }
     } else if (explorerResponseTime < 1500) {
-      return { strength: 2, color: 'text-green-400', bars: 2, label: `良好 (${explorerResponseTime}ms)` }
+      return { strength: 2, color: 'text-green-400', bars: 2, label: `${t('node.signal.good')} (${explorerResponseTime}ms)` }
     } else if (explorerResponseTime < 3000) {
-      return { strength: 1, color: 'text-yellow-500', bars: 1, label: `一般 (${explorerResponseTime}ms)` }
+      return { strength: 1, color: 'text-yellow-500', bars: 1, label: `${t('node.signal.fair')} (${explorerResponseTime}ms)` }
     } else {
-      return { strength: 1, color: 'text-orange-500', bars: 1, label: `较慢 (${explorerResponseTime}ms)` }
+      return { strength: 1, color: 'text-orange-500', bars: 1, label: `${t('node.signal.slow')} (${explorerResponseTime}ms)` }
     }
   }
 
   // 节点信号强度计算
   const getNodeSignalStrength = () => {
     if (nodeInfo.status === 'disconnected') {
-      return { strength: 0, color: 'text-red-500', bars: 0, label: '断开连接' }
+      return { strength: 0, color: 'text-red-500', bars: 0, label: t('node.signal.disconnected') }
     }
     if (nodeInfo.status === 'checking') {
-      return { strength: 0, color: 'text-yellow-500', bars: 0, label: '检查中...' }
+      return { strength: 0, color: 'text-yellow-500', bars: 0, label: t('node.status.checking') }
     }
     
     if (nodeInfo.responseTime < 500) {
-      return { strength: 3, color: 'text-green-500', bars: 3, label: `极好 (${nodeInfo.responseTime}ms)` }
+      return { strength: 3, color: 'text-green-500', bars: 3, label: `${t('node.signal.excellent')} (${nodeInfo.responseTime}ms)` }
     } else if (nodeInfo.responseTime < 1500) {
-      return { strength: 2, color: 'text-green-400', bars: 2, label: `良好 (${nodeInfo.responseTime}ms)` }
+      return { strength: 2, color: 'text-green-400', bars: 2, label: `${t('node.signal.good')} (${nodeInfo.responseTime}ms)` }
     } else if (nodeInfo.responseTime < 3000) {
-      return { strength: 1, color: 'text-yellow-500', bars: 1, label: `一般 (${nodeInfo.responseTime}ms)` }
+      return { strength: 1, color: 'text-yellow-500', bars: 1, label: `${t('node.signal.fair')} (${nodeInfo.responseTime}ms)` }
     } else {
-      return { strength: 1, color: 'text-orange-500', bars: 1, label: `较慢 (${nodeInfo.responseTime}ms)` }
+      return { strength: 1, color: 'text-orange-500', bars: 1, label: `${t('node.signal.slow')} (${nodeInfo.responseTime}ms)` }
     }
   }
 
@@ -254,14 +254,14 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
 
             {/* 状态文字提示 - 直接显示在信号后面 */}
             {nodeInfo.status === 'disconnected' && (
-              <span className="text-xs text-red-400">无法连接到节点</span>
+              <span className="text-xs text-red-400">{t('node.status.disconnected')}</span>
             )}
             {nodeInfo.status === 'checking' && (
-              <span className="text-xs text-yellow-400">正在连接节点...</span>
+              <span className="text-xs text-yellow-400">{t('node.status.checking')}</span>
             )}
             {nodeInfo.status === 'connected' && (
               <span className="text-xs text-gray-400">
-                节点: <span className={getNodeSignalStrength().color}>{getNodeSignalStrength().label}</span>
+                {t('node.status.connected')}: <span className={getNodeSignalStrength().color}>{getNodeSignalStrength().label}</span>
                 <span className="text-gray-500 ml-1">({nodeInfo.endpoint})</span>
               </span>
             )}
@@ -428,19 +428,19 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                 )}
               </div>
 
-              {/* 状态文字提示 - 直接显示在信号后面 */}
-              {explorerConnectionStatus === 'disconnected' && (
-                <span className="text-xs text-red-400">无法连接到区块浏览器</span>
-              )}
-              {explorerConnectionStatus === 'checking' && (
-                <span className="text-xs text-yellow-400">正在连接区块浏览器...</span>
-              )}
-              {explorerConnectionStatus === 'connected' && (
-                <span className="text-xs text-gray-400">
-                  区块浏览器: <span className={getSignalStrength().color}>{getSignalStrength().label}</span>
-                </span>
-              )}
-            </div>
+            {/* 状态文字提示 - 直接显示在信号后面 */}
+            {explorerConnectionStatus === 'disconnected' && (
+              <span className="text-xs text-red-400">{t('explorer.status.disconnected')}</span>
+            )}
+            {explorerConnectionStatus === 'checking' && (
+              <span className="text-xs text-yellow-400">{t('explorer.status.checking')}</span>
+            )}
+            {explorerConnectionStatus === 'connected' && (
+              <span className="text-xs text-gray-400">
+                {t('explorer.status.connected')}: <span className={getSignalStrength().color}>{getSignalStrength().label}</span>
+              </span>
+            )}
+          </div>
 
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-white font-medium">{t('transactions.recent')}</h3>
