@@ -191,6 +191,13 @@ const translations = {
     'send.messagePlaceholder': 'Enter your message (optional)',
     'send.messageFee': 'Message Fee',
     'send.totalFee': 'Total Fee',
+    'send.engrave': 'Engrave',
+    'send.engraveText': 'Engrave Text',
+    'send.engraveConfirm': 'Confirm Engraving',
+    'send.engraveSuccess': 'Engraving Successful!',
+    'send.engraveContent': 'Engraved Content',
+    'send.engraveFee': 'Engraving Fee',
+    'send.engravePlatformFee': 'Platform Fee',
 
     'send.error': 'Send Failed',
     'send.errorInfo': 'Please refresh the wallet and try again',
@@ -506,6 +513,13 @@ const translations = {
     'send.messagePlaceholder': '输入您的留言（可选）',
     'send.messageFee': '留言费用',
     'send.totalFee': '总手续费',
+    'send.engrave': '刻字上链',
+    'send.engraveText': '刻字内容',
+    'send.engraveConfirm': '确认刻字',
+    'send.engraveSuccess': '刻字成功!',
+    'send.engraveContent': '刻字内容',
+    'send.engraveFee': '刻字费用',
+    'send.engravePlatformFee': '平台服务费',
 
     'send.error': '发送失败',
     'send.errorInfo': '请刷新钱包后重试',
@@ -816,6 +830,17 @@ const translations = {
     'send.cancel': 'Отмена',
     'send.confirmTransactionOn': 'Подтвердить транзакцию',
     'send.backToEdit': 'Вернуться к редактированию',
+    'send.message': 'Сообщение',
+    'send.messagePlaceholder': 'Введите ваше сообщение (необязательно)',
+    'send.messageFee': 'Комиссия за сообщение',
+    'send.totalFee': 'Общая комиссия',
+    'send.engrave': 'Гравировка в блокчейн',
+    'send.engraveText': 'Текст гравировки',
+    'send.engraveConfirm': 'Подтвердить гравировку',
+    'send.engraveSuccess': 'Гравировка успешна!',
+    'send.engraveContent': 'Содержимое гравировки',
+    'send.engraveFee': 'Комиссия за гравировку',
+    'send.engravePlatformFee': 'Плата за обслуживание платформы',
 
     'send.error': 'Отправка не удалась',
     'send.errorInfo': 'Пожалуйста, попробуйте еще раз',
@@ -957,9 +982,9 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 // 检测浏览器语言
 function detectBrowserLanguage(): 'en' | 'zh' | 'ru' {
   if (typeof window === 'undefined') return 'en'
-  
+
   const browserLang = navigator.language.toLowerCase()
-  
+
   // 支持的语言映射
   if (browserLang.startsWith('zh')) {
     return 'zh'

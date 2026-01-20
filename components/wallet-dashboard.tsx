@@ -3,6 +3,7 @@
 import { LanguageSelector } from '@/components/language-selector'
 import { Button } from '@/components/ui/button'
 import { WalletAssets } from '@/components/wallet-assets'
+import { WalletEngrave } from '@/components/wallet-engrave'
 import { WalletHome } from '@/components/wallet-home'
 import { WalletReceive } from '@/components/wallet-receive'
 import { WalletSend } from '@/components/wallet-send'
@@ -131,6 +132,8 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
         return <WalletSend onNavigate={handleNavigation} />
       case 'settings':
         return <WalletSettings onNavigate={handleNavigation} onLockWallet={handleLockWallet} />
+      case 'engrave':
+        return <WalletEngrave onNavigate={handleNavigation} />
       case 'buy':
       case 'sell':
       case 'trade':
@@ -142,23 +145,7 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
               </h2>
               <p className="text-gray-400 mb-6">选择一个交易所开始交易 SCASH/USDT</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-xl mx-auto mb-6">
-                <a
-                  href="https://www.bit.com/spot?pair=SCASH-USDT"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group rounded-xl border border-purple-500/30 bg-gray-800/40 p-4 shadow-sm hover:shadow-xl hover:border-purple-400/50 transition-all hover:-translate-y-0.5"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-md bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center">
-                      <Coins className="h-5 w-5 text-purple-200" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-white font-semibold">bit.com</div>
-                      <div className="text-xs text-gray-400">SCASH/USDT</div>
-                    </div>
-                    <ArrowUpRight className="h-4 w-4 text-purple-300 group-hover:text-purple-200" />
-                  </div>
-                </a>
+            
                 <a
                   href="https://www.ourbit.com/zh-CN/exchange/SCASH_USDT"
                   target="_blank"
@@ -210,6 +197,7 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
                 <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                   {currentView === 'receive' && t('receive.title')}
                   {currentView === 'send' && t('action.send')}
+                  {currentView === 'engrave' && t('send.engrave')}
                   {currentView === 'assets' && t('nav.assets')}
                   {currentView === 'settings' && t('settings.title')}
                   {['buy', 'sell', 'trade'].includes(currentView) &&
