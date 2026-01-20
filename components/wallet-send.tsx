@@ -226,6 +226,9 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         break
       }
     }
+    if (dapInfo) {
+      pickAmount = pickAmount.plus(new Decimal(dapInfo.dapAmount).plus(new Decimal(dapNetworkFee)))
+    }
     if (pickAmount.lt(_sendAmount)) {
       setTotalAmountError(t('send.inputExceed'))
       return
@@ -253,7 +256,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     } else {
       setIsForcedDeductFeeFromAmount(false)
     }
-  }, [sendList])
+  }, [sendList, dapInfo, dapNetworkFee])
 
   // 计算 DAP 留言费用
   useEffect(() => {
@@ -293,10 +296,10 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
   useEffect(() => {
     let total = networkFee
     if (dapInfo) {
-      total = new Decimal(total).plus(dapInfo.dapAmount).toNumber()
+      total = new Decimal(total).plus(dapInfo.dapAmount).plus(dapNetworkFee).toNumber()
     }
     setTotalFee(total)
-  }, [networkFee, dapInfo])
+  }, [networkFee, dapInfo, dapNetworkFee])
 
   const handleAddAddress = () => {
     // Mock address book functionality
@@ -493,7 +496,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         change: signTransactionResult.change.toNumber(),
         feeRate: signTransactionResult.feeRate,
         pickUnspents: pickUnspents,
-        sendListConfirm: outputs,
+        sendListConfirm: [...sendListConfirm],
         timestamp: Date.now(),
         status: 'pending'
       }
