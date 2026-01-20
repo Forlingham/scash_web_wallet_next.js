@@ -1,13 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useLanguage } from '@/contexts/language-context'
-import { ArrowUpDown, X, QrCode, ChevronRight, ArrowLeft, Lock, ExternalLink } from 'lucide-react'
-import { Checkbox } from '@/components/ui/checkbox'
+import { QRScannerComponent } from '@/components/qr-scanner'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,26 +12,34 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useLanguage } from '@/contexts/language-context'
 import { useToast } from '@/hooks/use-toast'
+import { onBroadcastApi, Unspent } from '@/lib/api'
 import {
   calcAppFee,
+  calcDapFee,
   calcFee,
   calcValue,
   decryptWallet,
   hideString,
   NAME_TOKEN,
+  onOpenExplorer,
   SCASH_NETWORK,
   signTransaction,
-  validateScashAddress,
-  onOpenExplorer,
-  sleep
+  sleep,
+  validateScashAddress
 } from '@/lib/utils'
-import { QRScannerComponent } from '@/components/qr-scanner'
 import { PendingTransaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
-import { getBaseFeeApi, getScantxoutsetApi, onBroadcastApi, Unspent } from '@/lib/api'
-import Decimal from 'decimal.js'
-import * as bip39 from 'bip39'
 import { BIP32Factory } from 'bip32'
+import * as bip39 from 'bip39'
+import Decimal from 'decimal.js'
+import { ArrowUpDown, ChevronRight, ExternalLink, Lock, QrCode, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import * as ecc from 'tiny-secp256k1'
 
 interface WalletSendProps {
@@ -83,6 +84,10 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
   const [currentScanIndex, setCurrentScanIndex] = useState<number>(0)
 
   const [currentPendingTransaction, setCurrentPendingTransaction] = useState<PendingTransaction>()
+
+  const [dapMessage, setDapMessage] = useState<string>('')
+  const [dapFee, setDapFee] = useState<{ totalSats: number; totalScash: number; chunkCount: number; mode: string } | null>(null)
+  const [totalFee, setTotalFee] = useState<number>(0)
 
   async function getInitData() {
     setIsLoading(true)
@@ -251,6 +256,25 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     }
   }, [sendList])
 
+  // 计算 DAP 留言费用
+  useEffect(() => {
+    if (!dapMessage || !dapMessage.trim()) {
+      setDapFee(null)
+      return
+    }
+    const fee = calcDapFee(dapMessage)
+    setDapFee(fee)
+  }, [dapMessage])
+
+  // 计算总手续费
+  useEffect(() => {
+    let total = networkFee
+    if (dapFee) {
+      total = new Decimal(total).plus(dapFee.totalScash).toNumber()
+    }
+    setTotalFee(total)
+  }, [networkFee, dapFee])
+
   const handleAddAddress = () => {
     // Mock address book functionality
     setSendList([...sendList, { address: '', amount: '' }])
@@ -388,7 +412,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     const root = bip2.fromSeed(seed, SCASH_NETWORK)
     const path = "m/84'/0'/0'/0/0"
     const child = root.derivePath(path)
-    const signTransactionResult = signTransaction(pickUnspents, sendListConfirm, networkFee, wallet.address, child, appFee)
+    const signTransactionResult = signTransaction(pickUnspents, sendListConfirm, networkFee, wallet.address, child, appFee, dapMessage || undefined)
     if (!signTransactionResult.isSuccess) {
       toast({
         title: '签名失败',
@@ -623,6 +647,15 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
               </span>
             </div>
 
+            {dapFee && (
+              <div className="flex justify-between border-t border-gray-600 pt-3">
+                <span className="text-gray-400">{t('send.messageFee') || 'Message fee'}:</span>
+                <span className="text-white flex items-center gap-2">
+                  {dapFee.totalScash} {NAME_TOKEN}
+                </span>
+              </div>
+            )}
+
             <div className="">
               <div className="flex justify-between font-semibold">
                 <span className="text-gray-400">{t('send.total')}:</span>
@@ -635,6 +668,13 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
                 </div>
               </div>
             </div>
+
+            {dapMessage && (
+              <div className="bg-gray-900/50 rounded-lg p-3 mt-3">
+                <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">{t('send.message') || 'Message'}:</div>
+                <div className="text-white text-sm break-words">{dapMessage}</div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -681,7 +721,8 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
             <AlertDialogHeader>
               <AlertDialogTitle className="text-white">{t('send.confirm')}</AlertDialogTitle>
               <AlertDialogDescription className="text-gray-300">
-                {t('send.send')} {sendAmountTotal} {NAME_TOKEN}，{t('send.fee')} {networkFee} {NAME_TOKEN}。
+                {t('send.send')} {sendAmountTotal} {NAME_TOKEN}，{t('send.fee')} {networkFee} {NAME_TOKEN}
+                {dapFee && `，${t('send.messageFee') || 'Message fee'} ${dapFee.totalScash} ${NAME_TOKEN}`}。
                 <br />
                 {t('send.confirmTransactionInfo')}
               </AlertDialogDescription>
@@ -841,6 +882,36 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
 
             <span className="text-gray-300 text-sm select-none">{t('send.feeDeducted')}</span>
           </label>
+        </CardContent>
+      </Card>
+
+      {/* DAP Message */}
+      <Card className="bg-gray-800 border-gray-700">
+        <CardContent className="px-4 space-y-3">
+          <div className="text-green-400">{t('send.message') || 'Message'}:</div>
+          <textarea
+            value={dapMessage}
+            onChange={(e) => setDapMessage(e.target.value)}
+            placeholder={t('send.messagePlaceholder') || 'Enter your message (optional)'}
+            className="w-full bg-gray-900 text-white border border-gray-600 rounded-lg p-3 resize-none h-24 focus:outline-none focus:border-green-400"
+          />
+
+          {dapFee && (
+            <div className="space-y-2 bg-gray-900/50 rounded-lg p-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">{t('send.messageFee') || 'Message fee'}:</span>
+                <span className="text-white">
+                  {dapFee.totalScash} {NAME_TOKEN} ({dapFee.chunkCount} {dapFee.chunkCount === 1 ? 'chunk' : 'chunks'})
+                </span>
+              </div>
+              <div className="flex justify-between text-sm font-semibold">
+                <span className="text-gray-300">{t('send.totalFee') || 'Total fee'}:</span>
+                <span className="text-white">
+                  {totalFee} {NAME_TOKEN}
+                </span>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -11,15 +11,15 @@ export async function GET(req: Request) {
     confTarget = '6'
   }
   try {
-    const res = await callBitcoinRpc<any>('estimatesmartfee', [Number(confTarget)])
-    if (res?.errors) {
+    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('estimatesmartfee', [Number(confTarget)])
+    if (result?.errors) {
       const status = 201
-      const message = res?.errors?.[0] ?? '内部错误'
+      const message = result?.errors?.[0] ?? '内部错误'
       return apiErr(status, message)
     }
     const message = '获取智能手续费成功'
     const code = 200
-    return apiOk(res, code, message)
+    return apiOk(result, code, message, { endpoint, responseTime })
   } catch (err: any) {
     const status = err?.statusCode ?? 500
     const message = err?.message ?? '内部错误'

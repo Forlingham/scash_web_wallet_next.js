@@ -13,10 +13,10 @@ export async function GET(req: Request) {
   }
 
   try {
-    const res = await callBitcoinRpc<any>('scantxoutset', ['start', [{ desc: `addr(${address})` }]])
+    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('scantxoutset', ['start', [{ desc: `addr(${address})` }]])
     const message = '获取未花费交易输出成功'
     const code = 200
-    return apiOk(res, code, message)
+    return apiOk(result, code, message, { endpoint, responseTime })
   } catch (err: any) {
     const status = err?.statusCode ?? 500
     const message = err?.message ?? '内部错误'

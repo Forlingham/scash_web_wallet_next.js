@@ -187,6 +187,10 @@ const translations = {
     'send.cancel': 'Cancel',
     'send.confirmTransactionOn': 'Confirm Transaction',
     'send.backToEdit': 'Back to Edit',
+    'send.message': 'Message',
+    'send.messagePlaceholder': 'Enter your message (optional)',
+    'send.messageFee': 'Message Fee',
+    'send.totalFee': 'Total Fee',
 
     'send.error': 'Send Failed',
     'send.errorInfo': 'Please refresh the wallet and try again',
@@ -498,6 +502,10 @@ const translations = {
     'send.cancel': '取消',
     'send.confirmTransactionOn': '确认交易',
     'send.backToEdit': '返回编辑',
+    'send.message': '留言',
+    'send.messagePlaceholder': '输入您的留言（可选）',
+    'send.messageFee': '留言费用',
+    'send.totalFee': '总手续费',
 
     'send.error': '发送失败',
     'send.errorInfo': '请刷新钱包后重试',

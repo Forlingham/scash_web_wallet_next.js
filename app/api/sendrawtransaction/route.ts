@@ -27,10 +27,10 @@ export async function POST(req: Request) {
       return apiErr(400, 'rawtx 必须为十六进制字符串')
     }
 
-    const res = await callBitcoinRpc<any>('sendrawtransaction', [cleaned])
+    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('sendrawtransaction', [cleaned])
     const message = '发送原始交易成功'
     const code = 200
-    return apiOk({ txid: res }, code, message)
+    return apiOk({ txid: result }, code, message, { endpoint, responseTime })
   } catch (err: any) {
     const status = err?.statusCode ?? 500
     const message = err?.message ?? '内部错误'

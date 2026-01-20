@@ -1,4 +1,4 @@
-export function apiOk<T>(rpcData: T, code = 200, message = 'OK', nodeInfo?: { endpoint: string; responseTime: number }) {
+export function apiOk<T>(rpcData: T, code = 200, message = 'OK', nodeInfo: { endpoint: string; responseTime: number }) {
   return Response.json(
     {
       data: {
