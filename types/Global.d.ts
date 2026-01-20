@@ -73,3 +73,9 @@ interface TransactionVout {
 interface AddressTransactionsType {
   address: string
 }
+
+interface DapOutputsResult {
+  outputs: { address: string; amount: string }[]
+  dapAmount: number
+  chunkCount: number
+}

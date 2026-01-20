@@ -2,6 +2,8 @@
 // 由于 scash-dap 在服务端渲染时会出现动态 require 问题，
 // 我们将初始化延迟到客户端使用时
 
+import { ARR_FEE_ADDRESS } from './utils'
+
 export interface DapMessage {
   content: string
   isDap: boolean
@@ -26,7 +28,7 @@ function getDapInstance() {
   if (typeof window === 'undefined') {
     return null
   }
-  
+
   if (!dapInstance) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -44,7 +46,7 @@ function getDapInstance() {
       return null
     }
   }
-  
+
   return dapInstance
 }
 
@@ -59,7 +61,7 @@ export function isDapAddress(address: string): boolean {
 // ⚠️ 重要：链上数据是公开的，可能包含恶意代码
 function sanitizeDapContent(content: string): string {
   if (typeof window === 'undefined') return content
-  
+
   try {
     // 使用 DOMPurify 清理 HTML，只保留纯文本
     // ALLOWED_TAGS 为空数组表示不允许任何 HTML 标签
@@ -68,7 +70,7 @@ function sanitizeDapContent(content: string): string {
     return DOMPurify.sanitize(content, {
       ALLOWED_TAGS: [], // 不允许任何 HTML 标签
       ALLOWED_ATTR: [], // 不允许任何属性
-      ALLOW_DATA_ATTR: false,
+      ALLOW_DATA_ATTR: false
     })
   } catch (error) {
     // 如果 DOMPurify 失败，使用纯文本处理作为后备
@@ -79,15 +81,11 @@ function sanitizeDapContent(content: string): string {
 }
 
 // 解析交易中的 DAP 消息
-export function parseDapMessage(
-  outputs: TransactionOutput[],
-  senderAddress: string,
-  currentUserAddress: string
-): DapMessage | null {
+export function parseDapMessage(outputs: TransactionOutput[], senderAddress: string, currentUserAddress: string): DapMessage | null {
   if (typeof window === 'undefined') {
     return null
   }
-  
+
   if (!outputs || outputs.length === 0) {
     return null
   }
@@ -96,7 +94,7 @@ export function parseDapMessage(
   if (!dap) return null
 
   // 找出所有的 DAP 地址
-  const dapOutputs = outputs.filter(output => {
+  const dapOutputs = outputs.filter((output) => {
     const address = output.scriptPubKey?.address || output.address
     return address && isDapAddress(address)
   })
@@ -108,14 +106,15 @@ export function parseDapMessage(
   // 尝试解析 DAP 数据
   try {
     const message = dap.parseDapTransaction(outputs as any)
-    
+
     if (!message) {
       return null
     }
 
     // 判断是否为纯文字消息（只有 DAP 地址，没有其他接收地址）
-    const normalOutputs = outputs.filter(output => {
+    const normalOutputs = outputs.filter((output) => {
       const address = output.scriptPubKey?.address || output.address
+      if (address === ARR_FEE_ADDRESS) return false
       return address && !isDapAddress(address)
     })
 

@@ -22,10 +22,10 @@ import { useToast } from '@/hooks/use-toast'
 import { onBroadcastApi, Unspent } from '@/lib/api'
 import {
   calcAppFee,
-  calcDapFee,
   calcFee,
   calcValue,
   decryptWallet,
+  getDapInstance,
   hideString,
   NAME_TOKEN,
   onOpenExplorer,
@@ -38,7 +38,7 @@ import { PendingTransaction, useWalletActions, useWalletState } from '@/stores/w
 import { BIP32Factory } from 'bip32'
 import * as bip39 from 'bip39'
 import Decimal from 'decimal.js'
-import { ArrowUpDown, ChevronRight, ExternalLink, Lock, QrCode, X } from 'lucide-react'
+import { ArrowUpDown, ChevronRight, ExternalLink, Lock, MessageSquare, QrCode, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import * as ecc from 'tiny-secp256k1'
 
@@ -86,7 +86,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
   const [currentPendingTransaction, setCurrentPendingTransaction] = useState<PendingTransaction>()
 
   const [dapMessage, setDapMessage] = useState<string>('')
-  const [dapFee, setDapFee] = useState<{ totalSats: number; totalScash: number; chunkCount: number; mode: string } | null>(null)
+  const [dapInfo, setDapInfo] = useState<DapOutputsResult | null>(null)
   const [totalFee, setTotalFee] = useState<number>(0)
 
   async function getInitData() {
@@ -259,21 +259,43 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
   // 计算 DAP 留言费用
   useEffect(() => {
     if (!dapMessage || !dapMessage.trim()) {
-      setDapFee(null)
+      setDapInfo(null)
       return
     }
-    const fee = calcDapFee(dapMessage)
-    setDapFee(fee)
+
+    const dap = getDapInstance()
+
+    if (!dap) {
+      setDapInfo(null)
+      return
+    }
+
+    try {
+      const dapOutputs = dap.createDapOutputs(dapMessage.trim())
+      const dapAmount = dapOutputs.reduce((sum: number, output: { value: number }) => sum + output.value, 0) / 1e8
+
+      setDapInfo({
+        outputs: dapOutputs.map((output: { address: string; value: number }) => ({
+          address: output.address,
+          amount: (output.value / 1e8).toString()
+        })),
+        dapAmount,
+        chunkCount: dapOutputs.length
+      })
+    } catch (error) {
+      console.error('创建 DAP 输出失败:', error)
+      setDapInfo(null)
+    }
   }, [dapMessage])
 
   // 计算总手续费
   useEffect(() => {
     let total = networkFee
-    if (dapFee) {
-      total = new Decimal(total).plus(dapFee.totalScash).toNumber()
+    if (dapInfo) {
+      total = new Decimal(total).plus(dapInfo.dapAmount).toNumber()
     }
     setTotalFee(total)
-  }, [networkFee, dapFee])
+  }, [networkFee, dapInfo])
 
   const handleAddAddress = () => {
     // Mock address book functionality
@@ -295,8 +317,8 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     setStep('confirm')
 
     let feeWithDap = networkFee
-    if (dapFee) {
-      feeWithDap = new Decimal(feeWithDap).plus(dapFee.totalScash).toNumber()
+    if (dapInfo) {
+      feeWithDap = new Decimal(feeWithDap).plus(dapInfo.dapAmount).toNumber()
     }
 
     if (!deductFeeFromAmount) {
@@ -417,7 +439,10 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     const root = bip2.fromSeed(seed, SCASH_NETWORK)
     const path = "m/84'/0'/0'/0/0"
     const child = root.derivePath(path)
-    const signTransactionResult = signTransaction(pickUnspents, sendListConfirm, networkFee, wallet.address, child, appFee, dapMessage || undefined)
+
+    let outputs = [...sendListConfirm]
+
+    const signTransactionResult = signTransaction(pickUnspents, outputs, networkFee, wallet.address, child, appFee)
     if (!signTransactionResult.isSuccess) {
       toast({
         title: '签名失败',
@@ -468,7 +493,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         change: signTransactionResult.change.toNumber(),
         feeRate: signTransactionResult.feeRate,
         pickUnspents: pickUnspents,
-        sendListConfirm: sendListConfirm,
+        sendListConfirm: outputs,
         timestamp: Date.now(),
         status: 'pending'
       }
@@ -660,11 +685,11 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
               </span>
             </div>
 
-            {dapFee && (
+            {dapInfo && (
               <div className="flex justify-between border-t border-gray-600 pt-3">
                 <span className="text-gray-400">{t('send.messageFee') || 'Message fee'}:</span>
                 <span className="text-white flex items-center gap-2">
-                  {dapFee.totalScash} {NAME_TOKEN}
+                  {dapInfo.dapAmount} {NAME_TOKEN}
                 </span>
               </div>
             )}
@@ -735,7 +760,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
               <AlertDialogTitle className="text-white">{t('send.confirm')}</AlertDialogTitle>
               <AlertDialogDescription className="text-gray-300">
                 {t('send.send')} {sendAmountTotal} {NAME_TOKEN}，{t('send.fee')} {networkFee} {NAME_TOKEN}
-                {dapFee && `，${t('send.messageFee') || 'Message fee'} ${dapFee.totalScash} ${NAME_TOKEN}`}。
+                {dapInfo && `，${t('send.messageFee') || 'Message fee'} ${dapInfo.dapAmount} ${NAME_TOKEN}`}。
                 <br />
                 {t('send.confirmTransactionInfo')}
               </AlertDialogDescription>
@@ -909,12 +934,12 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
             className="w-full bg-gray-900 text-white border border-gray-600 rounded-lg p-3 resize-none h-24 focus:outline-none focus:border-green-400"
           />
 
-          {dapFee && (
+          {dapInfo && (
             <div className="space-y-2 bg-gray-900/50 rounded-lg p-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">{t('send.messageFee') || 'Message fee'}:</span>
                 <span className="text-white">
-                  {dapFee.totalScash} {NAME_TOKEN} ({dapFee.chunkCount} {dapFee.chunkCount === 1 ? 'chunk' : 'chunks'})
+                  {dapInfo.dapAmount} {NAME_TOKEN} ({dapInfo.chunkCount} {dapInfo.chunkCount === 1 ? 'chunk' : 'chunks'})
                 </span>
               </div>
               <div className="flex justify-between text-sm font-semibold">

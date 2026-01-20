@@ -10,7 +10,7 @@ import pkg from '../package.json'
 
 let dapInstance: any = null
 
-function getDapInstance() {
+export function getDapInstance() {
   if (typeof window === 'undefined') {
     return null
   }
@@ -18,14 +18,7 @@ function getDapInstance() {
   if (!dapInstance) {
     try {
       const ScashDAP = require('scash-dap')
-      dapInstance = new ScashDAP({
-        messagePrefix: '\x18Scash Signed Message:\n',
-        bech32: 'scash',
-        bip32: { public: 0x0488b21e, private: 0x0488ade4 },
-        pubKeyHash: 0x3c,
-        scriptHash: 0x7d,
-        wif: 0x80
-      })
+      dapInstance = new ScashDAP(SCASH_NETWORK)
     } catch (error) {
       console.error('初始化 DAP 失败:', error)
       return null
@@ -216,35 +209,6 @@ export function calcFee(inputCount: number, outputCount: number, feerate: number
 }
 
 /**
- * 估算 DAP 留言的费用
- * @param text - 留言文本
- * @returns {object} { totalSats: 总费用(sats), totalScash: 总费用(SCASH), chunkCount: 分片数量 } 或 null
- */
-export function calcDapFee(text: string) {
-  if (!text || !text.trim()) {
-    return null
-  }
-
-  const dap = getDapInstance()
-  if (!dap) {
-    return null
-  }
-
-  try {
-    const cost = dap.estimateCost(text)
-    return {
-      totalSats: cost.totalSats,
-      totalScash: new Decimal(cost.totalSats).div(SAT_PER_SCASH).toNumber(),
-      chunkCount: cost.chunkCount,
-      mode: cost.mode
-    }
-  } catch (error) {
-    console.error('估算 DAP 费用失败:', error)
-    return null
-  }
-}
-
-/**
  * 验证 SCASH 地址是否有效
  * @param {string} address - SCASH 地址
  * @returns {boolean} - 是否有效
@@ -296,7 +260,6 @@ export function hideString(str: string) {
 
 /**
  * 签名交易
- * @param dapMessage 可选的留言消息，如果提供则会将留言数据添加到交易中
  */
 export function signTransaction(
   utxos: Unspent[],
@@ -304,8 +267,7 @@ export function signTransaction(
   feeRate: number,
   myAddress: string,
   child: BIP32Interface,
-  appFee: number,
-  dapMessage?: string
+  appFee: number
 ) {
   // 计算手续费
   let networkFee = feeRate
@@ -346,26 +308,6 @@ export function signTransaction(
       value: scashToSat(output.amount)
     })
   })
-
-  // 添加 DAP 留言输出
-  if (dapMessage) {
-    const dap = getDapInstance()
-    if (dap) {
-      try {
-        const dapOutputs = dap.createDapOutputs(dapMessage)
-        console.log('DAP outputs:', dapOutputs)
-        dapOutputs.forEach((output: { address: string; value: number }) => {
-          psbt.addOutput({
-            address: output.address,
-            value: output.value
-          })
-        })
-      } catch (error) {
-        console.error('创建 DAP 输出失败:', error)
-      }
-    }
-  }
-
   if (appFee) {
     psbt.addOutput({
       address: ARR_FEE_ADDRESS,
@@ -373,25 +315,14 @@ export function signTransaction(
     })
   }
 
-  // 计算找零金额（需要减去 DAP 输出的金额）
-  let changeAmount = totalInput.minus(totalOutput).minus(feeRate)
-  if (dapMessage) {
-    const dap = getDapInstance()
-    if (dap) {
-      try {
-        const dapCost = dap.estimateCost(dapMessage)
-        changeAmount = changeAmount.minus(dapCost.totalSats / 1e8)
-      } catch (error) {
-        console.error('计算 DAP 成本失败:', error)
-      }
-    }
-  }
-  console.log('change', changeAmount.toString())
+  // 计算找零金额
+  const change = totalInput.minus(totalOutput).minus(feeRate)
+  console.log('change', change.toString())
 
-  if (changeAmount.gt(0)) {
+  if (change.gt(0)) {
     psbt.addOutput({
       address: myAddress,
-      value: scashToSat(changeAmount.toString())
+      value: scashToSat(change.toString())
     })
   }
 
@@ -417,7 +348,7 @@ export function signTransaction(
       rawtx: '',
       totalInput,
       totalOutput,
-      change: changeAmount,
+      change,
       feeRate,
       appFee
     }
@@ -430,7 +361,7 @@ export function signTransaction(
     rawtx,
     totalInput,
     totalOutput,
-    change: changeAmount,
+    change,
     feeRate,
     appFee
   }

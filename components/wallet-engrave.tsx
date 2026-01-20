@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useLanguage } from '@/contexts/language-context'
 import { ArrowLeft, Lock, ExternalLink, MessageSquare } from 'lucide-react'
@@ -20,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
 import {
-  calcDapFee,
+  calcFee,
   calcValue,
   decryptWallet,
   NAME_TOKEN,
@@ -28,7 +27,8 @@ import {
   signTransaction,
   ARR_FEE_ADDRESS,
   onOpenExplorer,
-  sleep
+  sleep,
+  getDapInstance
 } from '@/lib/utils'
 import { PendingTransaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
 import { onBroadcastApi, Unspent } from '@/lib/api'
@@ -49,11 +49,11 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
   const [step, setStep] = useState<'form' | 'confirm' | 'success'>('form')
 
   const [engraveText, setEngraveText] = useState<string>('')
-  const [dapFee, setDapFee] = useState<{ totalSats: number; totalScash: number; chunkCount: number; mode: string } | null>(null)
-  const [appFee] = useState<number>(0.1)
+  const [dapInfo, setDapInfo] = useState<DapOutputsResult | null>(null)
+  const [appFee] = useState<number>(0.05)
+  const [networkFee, setNetworkFee] = useState<number>(0)
   const [totalFee, setTotalFee] = useState<number>(0)
   const [baseFee, setBaseFee] = useState<number>(0)
-  const [networkFee, setNetworkFee] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const [pickUnspents, setPickUnspents] = useState<Unspent[]>([])
@@ -61,8 +61,6 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
   const [passwordError, setPasswordError] = useState<string>('')
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false)
   const [currentPendingTransaction, setCurrentPendingTransaction] = useState<PendingTransaction>()
-
-  const ENGRAVE_AMOUNT = 0.00000546
 
   async function getInitData() {
     setIsLoading(true)
@@ -83,34 +81,58 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
 
   useEffect(() => {
     if (!engraveText || !engraveText.trim()) {
-      setDapFee(null)
+      setDapInfo(null)
       setTotalFee(0)
       return
     }
-    const fee = calcDapFee(engraveText)
-    setDapFee(fee)
+
+    const dap = getDapInstance()
+    if (!dap) {
+      setDapInfo(null)
+      return
+    }
+
+    try {
+      const dapOutputs = dap.createDapOutputs(engraveText)
+      const dapAmount = dapOutputs.reduce((sum: number, output: { value: number }) => sum + output.value, 0) / 1e8
+
+      setDapInfo({
+        outputs: dapOutputs.map((output: { address: string; value: number }) => ({
+          address: output.address,
+          amount: (output.value / 1e8).toString()
+        })),
+        dapAmount,
+        chunkCount: dapOutputs.length
+      })
+    } catch (error) {
+      console.error('创建 DAP 输出失败:', error)
+      setDapInfo(null)
+    }
   }, [engraveText])
 
   useEffect(() => {
-    if (!dapFee) {
-      setTotalFee(0)
+    if (!dapInfo || !baseFee) {
       setNetworkFee(0)
+      setTotalFee(0)
       return
     }
 
-    const total = new Decimal(dapFee.totalScash).plus(appFee).toNumber()
+    const inputCount = pickUnspents.length
+    const outputCount = dapInfo.outputs.length + 1 + 1
+
+    const feeResult = calcFee(inputCount, outputCount, baseFee)
+    setNetworkFee(feeResult.feeScash)
+
+    const total = new Decimal(dapInfo.dapAmount).plus(feeResult.feeScash).plus(appFee).toNumber()
     setTotalFee(total)
-    setNetworkFee(dapFee.totalScash)
-  }, [dapFee, appFee])
+  }, [dapInfo, baseFee, pickUnspents, appFee])
 
   useEffect(() => {
-    if (step !== 'form' || !baseFee) return
-    if (!engraveText || !engraveText.trim()) {
-      setPickUnspents([])
+    if (step !== 'form' || !baseFee || !totalFee || !dapInfo) {
       return
     }
 
-    const requiredAmount = new Decimal(ENGRAVE_AMOUNT).plus(totalFee)
+    const requiredAmount = new Decimal(dapInfo.dapAmount).plus(networkFee).plus(appFee)
 
     let pickAmount = new Decimal(0)
     const pickUnspentsArr: Unspent[] = []
@@ -132,10 +154,10 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
     }
 
     setPickUnspents([...pickUnspentsArr])
-  }, [engraveText, baseFee, totalFee, step])
+  }, [engraveText, baseFee, totalFee, networkFee, dapInfo, step])
 
   const handleSendToConfirm = () => {
-    if (pickUnspents.length === 0) {
+    if (pickUnspents.length === 0 || !dapInfo) {
       return
     }
     setStep('confirm')
@@ -154,6 +176,12 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
 
   const handleConfirmTransaction = async () => {
     setIsConfirmLoading(true)
+
+    if (!dapInfo) {
+      setIsConfirmLoading(false)
+      return
+    }
+
     const walletObj = decryptWallet(wallet.encryptedWallet, password)
     if (!walletObj.isSuccess) {
       setPasswordError(t('wallet.lock.error'))
@@ -173,11 +201,11 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
     const path = "m/84'/0'/0'/0/0"
     const child = root.derivePath(path)
 
-    const outputs = [
-      { address: ARR_FEE_ADDRESS, amount: appFee.toString() }
-    ]
+    const outputs = [...dapInfo.outputs]
 
-    const signTransactionResult = signTransaction(pickUnspents, outputs, networkFee, wallet.address, child, appFee, engraveText)
+    const totalFeeRate = new Decimal(networkFee).plus(appFee).toNumber()
+    const signTransactionResult = signTransaction(pickUnspents, outputs, totalFeeRate, wallet.address, child, appFee)
+
     if (!signTransactionResult.isSuccess) {
       toast({
         title: '签名失败',
@@ -236,7 +264,6 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
       addPendingTransaction(pendingTransaction)
       setCurrentPendingTransaction(pendingTransaction)
       setStep('success')
-      setIsSliding(false)
       setPassword('')
       toast({
         title: t('send.success'),
@@ -264,8 +291,6 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
     setIsCancelLoading(false)
     setShowConfirmDialog(false)
   }
-
-  const [isSliding, setIsSliding] = useState(false)
 
   if (step === 'success') {
     return (
@@ -308,15 +333,21 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
 
                 <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-600/30 backdrop-blur-sm">
                   <div className="flex justify-between text-sm">
-                    <span className="text-purple-300">刻字费用:</span>
+                    <span className="text-purple-300">刻字损耗:</span>
                     <span className="text-white">
-                      {ENGRAVE_AMOUNT} {NAME_TOKEN}
+                      {dapInfo?.dapAmount.toFixed(8)} {NAME_TOKEN}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm mt-2">
-                    <span className="text-purple-300">手续费:</span>
+                    <span className="text-purple-300">网络手续费:</span>
                     <span className="text-white">
-                      {totalFee} {NAME_TOKEN}
+                      {networkFee.toFixed(8)} {NAME_TOKEN}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm mt-2">
+                    <span className="text-purple-300">平台手续费:</span>
+                    <span className="text-white">
+                      {appFee.toFixed(8)} {NAME_TOKEN}
                     </span>
                   </div>
                 </div>
@@ -361,16 +392,22 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
 
             <div className="space-y-2 border-t border-gray-600 pt-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">刻字费用:</span>
-                <span className="text-white">{ENGRAVE_AMOUNT} {NAME_TOKEN}</span>
+                <span className="text-gray-400">刻字损耗:</span>
+                <span className="text-white">
+                  {dapInfo?.dapAmount.toFixed(8)} {NAME_TOKEN}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">DAP 费用:</span>
-                <span className="text-white">{networkFee} {NAME_TOKEN}</span>
+                <span className="text-gray-400">网络手续费:</span>
+                <span className="text-white">
+                  {networkFee.toFixed(8)} {NAME_TOKEN}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">平台服务费:</span>
-                <span className="text-white">{appFee} {NAME_TOKEN}</span>
+                <span className="text-gray-400">平台手续费:</span>
+                <span className="text-white">
+                  {appFee.toFixed(8)} {NAME_TOKEN}
+                </span>
               </div>
             </div>
 
@@ -378,11 +415,9 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
               <span className="text-gray-400">{t('send.total')}:</span>
               <div className="text-right">
                 <span className="text-white font-semibold">
-                  {new Decimal(ENGRAVE_AMOUNT).plus(totalFee).toFixed(8)} {NAME_TOKEN}
+                  {totalFee.toFixed(8)} {NAME_TOKEN}
                 </span>
-                <p className="text-gray-400 text-sm">
-                  ${calcValue(new Decimal(ENGRAVE_AMOUNT).plus(totalFee).toNumber(), coinPrice)} USD
-                </p>
+                <p className="text-gray-400 text-sm">${calcValue(totalFee, coinPrice)} USD</p>
               </div>
             </div>
           </CardContent>
@@ -394,7 +429,7 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
               <Lock className="h-4 w-4" />
               {t('send.confirmTransaction')}
             </Label>
-            <Input
+            <input
               type="password"
               value={password}
               onChange={(e) => {
@@ -402,7 +437,7 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
                 if (passwordError) setPasswordError('')
               }}
               placeholder={t('send.inputPassword')}
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              className="w-full bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:border-green-400"
             />
             {passwordError && <p className="text-red-400 text-sm">{passwordError}</p>}
           </CardContent>
@@ -416,12 +451,8 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
           }}
         >
           <AlertDialogTrigger asChild>
-            <Button
-              onClick={handlePasswordSubmit}
-              disabled={isSliding || !password}
-              className="w-full bg-green-500 hover:bg-green-600 text-white h-12"
-            >
-              {isSliding ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : t('send.confirmPay')}
+            <Button onClick={handlePasswordSubmit} disabled={!password} className="w-full bg-green-500 hover:bg-green-600 text-white h-12">
+              {t('send.confirmPay')}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent className="bg-gray-800 border-gray-700">
@@ -430,7 +461,7 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
               <AlertDialogDescription className="text-gray-300">
                 确认将文字 "{engraveText}" 刻在区块链上吗？此操作不可撤销。
                 <br />
-                总费用: {new Decimal(ENGRAVE_AMOUNT).plus(totalFee).toFixed(8)} {NAME_TOKEN}
+                总费用: {totalFee.toFixed(8)} {NAME_TOKEN}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -457,7 +488,6 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
 
   return (
     <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-
       <Card className="bg-gray-800 border-gray-700">
         <CardContent className="px-4 space-y-4">
           <div className="text-center py-4">
@@ -465,7 +495,8 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
               <MessageSquare className="h-8 w-8 text-white" />
             </div>
             <p className="text-gray-300 text-sm">
-              将您的文字永久刻在区块链上，<br />
+              将您的文字永久刻在区块链上，
+              <br />
               让它永远无法被篡改或删除
             </p>
           </div>
@@ -478,43 +509,47 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
               placeholder="输入您想永久保存的文字..."
               className="w-full bg-gray-900 text-white border border-gray-600 rounded-lg p-3 resize-none h-32 focus:outline-none focus:border-purple-400"
             />
-            <div className="text-right text-xs text-gray-400">
-              {engraveText.length} 字符
-            </div>
+            <div className="text-right text-xs text-gray-400">{engraveText.length} 字符</div>
           </div>
 
-          {dapFee && (
+          {dapInfo && (
             <div className="bg-gray-900/50 rounded-lg p-3 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">刻字费用:</span>
-                <span className="text-white">{ENGRAVE_AMOUNT} {NAME_TOKEN}</span>
+                <span className="text-gray-400">刻字损耗:</span>
+                <span className="text-white">
+                  {dapInfo.dapAmount.toFixed(8)} {NAME_TOKEN}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">DAP 费用 ({dapFee.chunkCount} 个分片):</span>
-                <span className="text-white">{dapFee.totalScash} {NAME_TOKEN}</span>
+                <span className="text-gray-400">分片数量:</span>
+                <span className="text-white">{dapInfo.chunkCount} 个</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">平台服务费:</span>
-                <span className="text-white">{appFee} {NAME_TOKEN}</span>
+                <span className="text-gray-400">网络手续费:</span>
+                <span className="text-white">
+                  {networkFee.toFixed(8)} {NAME_TOKEN}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">平台手续费:</span>
+                <span className="text-white">
+                  {appFee.toFixed(8)} {NAME_TOKEN}
+                </span>
               </div>
               <div className="flex justify-between text-sm font-semibold border-t border-gray-600 pt-2">
                 <span className="text-gray-300">总费用:</span>
                 <span className="text-white">
-                  {new Decimal(ENGRAVE_AMOUNT).plus(dapFee.totalScash).plus(appFee).toFixed(8)} {NAME_TOKEN}
+                  {totalFee.toFixed(8)} {NAME_TOKEN}
                 </span>
               </div>
-              <div className="text-right text-xs text-gray-400">
-                ≈ ${calcValue(new Decimal(ENGRAVE_AMOUNT).plus(dapFee.totalScash).plus(appFee).toNumber(), coinPrice)} USD
-              </div>
+              <div className="text-right text-xs text-gray-400">≈ ${calcValue(totalFee, coinPrice)} USD</div>
             </div>
           )}
         </CardContent>
       </Card>
 
       {totalFee > 0 && pickUnspents.length === 0 && (
-        <div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-700 rounded-lg p-2">
-          余额不足，无法完成刻字
-        </div>
+        <div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-700 rounded-lg p-2">余额不足，无法完成刻字</div>
       )}
 
       <Button
