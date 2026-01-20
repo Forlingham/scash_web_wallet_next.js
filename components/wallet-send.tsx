@@ -294,14 +294,19 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
     }
     setStep('confirm')
 
+    let feeWithDap = networkFee
+    if (dapFee) {
+      feeWithDap = new Decimal(feeWithDap).plus(dapFee.totalScash).toNumber()
+    }
+
     if (!deductFeeFromAmount) {
-      setSendAmountTotal(+new Decimal(sendAmount).add(networkFee).toFixed(8))
+      setSendAmountTotal(+new Decimal(sendAmount).add(feeWithDap).toFixed(8))
     } else {
       // 如果从金额中减去手续费，就在最后一个地址减。需要判断金额够手续费不，不够就再向上找一个，全部不够就报错
       let lastIndex = validSendList.length - 1
       while (lastIndex >= 0) {
-        if (new Decimal(validSendList[lastIndex].amount || '0').gte(networkFee)) {
-          validSendList[lastIndex].amount = new Decimal(validSendList[lastIndex].amount || '0').minus(networkFee).toString()
+        if (new Decimal(validSendList[lastIndex].amount || '0').gte(feeWithDap)) {
+          validSendList[lastIndex].amount = new Decimal(validSendList[lastIndex].amount || '0').minus(feeWithDap).toString()
           break
         }
         lastIndex--
@@ -573,6 +578,14 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
                     </div>
                   ))}
                 </div>
+
+                {/* DAP Message */}
+                {dapMessage && (
+                  <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-600/30 backdrop-blur-sm">
+                    <p className="text-purple-300 text-xs uppercase tracking-wide mb-1">{t('send.message')}:</p>
+                    <p className="text-white text-sm break-words">{dapMessage}</p>
+                  </div>
+                )}
 
                 {/* Raw Transaction */}
                 <div className="bg-purple-950/50 rounded-lg p-3 border border-purple-600/30 backdrop-blur-sm">
