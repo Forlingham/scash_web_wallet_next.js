@@ -10,14 +10,20 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useLanguage } from '@/contexts/language-context'
 import { useToast } from '@/hooks/use-toast'
-import { decryptWallet, downloadWalletFile, encryptWallet, passwordMD5, SCASH_NETWORK } from '@/lib/utils'
+import {
+  ADDRESS_PATH,
+  decryptWallet,
+  downloadWalletFile,
+  encryptWallet,
+  getWalletPrivateKey,
+  passwordMD5,
+  SCASH_NETWORK
+} from '@/lib/utils'
 import { useWalletActions, useWalletStore, type WalletInfo } from '@/stores/wallet-store'
-import { BIP32Factory } from 'bip32'
 import * as bip39 from 'bip39'
 import * as bitcoin from 'bitcoinjs-lib'
 import { AlertTriangle, Check, Copy, Download, Eye, EyeOff, Upload } from 'lucide-react'
 import { useState } from 'react'
-import * as ecc from 'tiny-secp256k1'
 
 interface WalletSetupProps {
   onWalletCreated: () => void
@@ -124,11 +130,8 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
     const passwordHash = passwordMD5(password)
 
     // 完成钱包生成，使用用户密码对钱包进行加密
-    const bip2 = BIP32Factory(ecc)
-    const seed = bip39.mnemonicToSeedSync(generatedMnemonic)
-    const root = bip2.fromSeed(seed, SCASH_NETWORK)
-    const path = "m/84'/0'/0'/0/0"
-    const child = root.derivePath(path)
+    const child = getWalletPrivateKey(generatedMnemonic)
+    const path = ADDRESS_PATH
     const { address } = bitcoin.payments.p2wpkh({
       pubkey: Buffer.from(child.publicKey),
       network: SCASH_NETWORK
@@ -290,9 +293,9 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
       .trim()
       .replace(/\s+/g, ' ') // 将所有连续空白字符（包括换行符、制表符等）替换为单个空格
       .toLowerCase() // 转换为小写以确保一致性
-    
-    const words = cleanedMnemonic.split(' ').filter(word => word.length > 0)
-    
+
+    const words = cleanedMnemonic.split(' ').filter((word) => word.length > 0)
+
     if (words.length !== 12) {
       toast({
         title: 'Invalid Mnemonic',

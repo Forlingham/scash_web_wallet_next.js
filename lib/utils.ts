@@ -5,7 +5,9 @@ import Decimal from 'decimal.js'
 import { bech32 } from 'bech32'
 import * as bitcoin from 'bitcoinjs-lib'
 import { Unspent } from './api'
-import { BIP32Interface } from 'bip32'
+import { BIP32Interface, BIP32Factory } from 'bip32'
+import * as bip39 from 'bip39'
+import * as ecc from 'tiny-secp256k1'
 import pkg from '../package.json'
 import { getArrFeeAddress, getScashNetwork } from './const'
 
@@ -18,8 +20,8 @@ export function getDapInstance() {
 
   if (!dapInstance) {
     try {
-      console.log(SCASH_NETWORK,'SCASH_NETWORK');
-      
+      console.log(SCASH_NETWORK, 'SCASH_NETWORK')
+
       const ScashDAP = require('scash-dap')
       dapInstance = new ScashDAP(SCASH_NETWORK)
     } catch (error) {
@@ -424,4 +426,13 @@ export const analyzeTransaction = (tx: TransactionType, currentAddress: string) 
     timestamp: tx.timestamp,
     confirmations: tx.confirmations
   }
+}
+
+export const ADDRESS_PATH = "m/84'/0'/0'/0/0"
+export function getWalletPrivateKey(mnemonic: string) {
+  const bip2 = BIP32Factory(ecc)
+  const seed = bip39.mnemonicToSeedSync(mnemonic)
+  const root = bip2.fromSeed(seed, SCASH_NETWORK)
+  const child = root.derivePath(ADDRESS_PATH)
+  return child
 }

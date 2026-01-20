@@ -22,6 +22,7 @@ import {
   calcValue,
   decryptWallet,
   getDapInstance,
+  getWalletPrivateKey,
   NAME_TOKEN,
   onOpenExplorer,
   SCASH_NETWORK,
@@ -29,12 +30,9 @@ import {
   sleep
 } from '@/lib/utils'
 import { PendingTransaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
-import { BIP32Factory } from 'bip32'
-import * as bip39 from 'bip39'
 import Decimal from 'decimal.js'
 import { ArrowLeft, ExternalLink, Lock, MessageSquare } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import * as ecc from 'tiny-secp256k1'
 interface WalletEngraveProps {
   onNavigate: (view: string) => void
 }
@@ -193,11 +191,7 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
       return
     }
 
-    const bip2 = BIP32Factory(ecc)
-    const seed = bip39.mnemonicToSeedSync(walletObj.wallet.mnemonic)
-    const root = bip2.fromSeed(seed, SCASH_NETWORK)
-    const path = "m/84'/0'/0'/0/0"
-    const child = root.derivePath(path)
+    const child = getWalletPrivateKey(walletObj.wallet.mnemonic)
 
     const outputs = [...dapInfo.outputs]
 

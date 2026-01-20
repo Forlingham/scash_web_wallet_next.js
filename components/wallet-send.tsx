@@ -26,6 +26,7 @@ import {
   calcValue,
   decryptWallet,
   getDapInstance,
+  getWalletPrivateKey,
   hideString,
   NAME_TOKEN,
   onOpenExplorer,
@@ -35,12 +36,9 @@ import {
   validateScashAddress
 } from '@/lib/utils'
 import { PendingTransaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
-import { BIP32Factory } from 'bip32'
-import * as bip39 from 'bip39'
 import Decimal from 'decimal.js'
-import { ArrowUpDown, ChevronRight, ExternalLink, Lock, MessageSquare, QrCode, X } from 'lucide-react'
+import { ArrowUpDown, ChevronRight, ExternalLink, Lock, QrCode, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import * as ecc from 'tiny-secp256k1'
 
 interface WalletSendProps {
   onNavigate: (view: string) => void
@@ -87,6 +85,7 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
 
   const [dapMessage, setDapMessage] = useState<string>('')
   const [dapInfo, setDapInfo] = useState<DapOutputsResult | null>(null)
+  const [dapNetworkFee, setDapNetworkFee] = useState<number>(0)
   const [totalFee, setTotalFee] = useState<number>(0)
 
   async function getInitData() {
@@ -282,6 +281,8 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
         dapAmount,
         chunkCount: dapOutputs.length
       })
+      const feeResult = calcFee(0, dapOutputs.length, baseFee)
+      setDapNetworkFee(feeResult.feeScash)
     } catch (error) {
       console.error('创建 DAP 输出失败:', error)
       setDapInfo(null)
@@ -434,18 +435,17 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
       return
     }
 
-    const bip2 = BIP32Factory(ecc)
-    const seed = bip39.mnemonicToSeedSync(walletObj.wallet.mnemonic)
-    const root = bip2.fromSeed(seed, SCASH_NETWORK)
-    const path = "m/84'/0'/0'/0/0"
-    const child = root.derivePath(path)
+    const child = getWalletPrivateKey(walletObj.wallet.mnemonic)
 
     let outputs = [...sendListConfirm]
-
-    const signTransactionResult = signTransaction(pickUnspents, outputs, networkFee, wallet.address, child, appFee)
+    if (dapInfo) {
+      outputs = [...outputs, ...dapInfo.outputs]
+    }
+    const feeRate = new Decimal(networkFee).add(dapNetworkFee).toNumber()
+    const signTransactionResult = signTransaction(pickUnspents, outputs, feeRate, wallet.address, child, appFee)
     if (!signTransactionResult.isSuccess) {
       toast({
-        title: '签名失败',
+        title: t('send.errorSign'),
         description: '',
         variant: 'destructive'
       })
@@ -940,6 +940,12 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
                 <span className="text-gray-400">{t('send.messageFee') || 'Message fee'}:</span>
                 <span className="text-white">
                   {dapInfo.dapAmount} {NAME_TOKEN} ({dapInfo.chunkCount} {dapInfo.chunkCount === 1 ? 'chunk' : 'chunks'})
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">{t('send.messageNetworkFee') || 'Message network fee'}:</span>
+                <span className="text-white">
+                  {dapNetworkFee} {NAME_TOKEN}
                 </span>
               </div>
               <div className="flex justify-between text-sm font-semibold">

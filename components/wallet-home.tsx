@@ -406,6 +406,37 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
         </Card>
 
         <div className="grid grid-cols-4 gap-2">
+          {/* Trade Button */}
+          <button
+            className="group flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-600/5 border border-orange-500/30 hover:border-orange-400/60 hover:from-orange-500/20 hover:to-red-600/10 transition-all duration-300 active:scale-95"
+            onClick={() => {
+              onNavigate('trade')
+            }}
+          >
+            <div className="relative mb-2">
+              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <ArrowUpDown className="h-5 w-5 text-orange-400" />
+              </div>
+              <div className="absolute inset-0 rounded-full bg-orange-400/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+            <span className="text-xs text-orange-400/80 font-medium">{t('action.trade')}</span>
+          </button>
+          {/* Engrave Button */}
+          <button
+            className="group flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-600/5 border border-purple-500/30 hover:border-purple-400/60 hover:from-purple-500/20 hover:to-pink-600/10 transition-all duration-300 active:scale-95"
+            onClick={() => {
+              onNavigate('engrave')
+            }}
+          >
+            <div className="relative mb-2">
+              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <MessageSquare className="h-5 w-5 text-purple-400" />
+              </div>
+              <div className="absolute inset-0 rounded-full bg-purple-400/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+            <span className="text-xs text-purple-400/80 font-medium">{t('action.engrave')}</span>
+          </button>
+
           {/* Receive Button */}
           <button
             className="group flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/30 hover:border-green-400/60 hover:from-green-500/20 hover:to-green-600/10 transition-all duration-300 active:scale-95"
@@ -422,22 +453,6 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
             <span className="text-xs text-green-400/80 font-medium">{t('action.receive')}</span>
           </button>
 
-          {/* Engrave Button */}
-          <button
-            className="group flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-600/5 border border-purple-500/30 hover:border-purple-400/60 hover:from-purple-500/20 hover:to-pink-600/10 transition-all duration-300 active:scale-95"
-            onClick={() => {
-              onNavigate('engrave')
-            }}
-          >
-            <div className="relative mb-2">
-              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <MessageSquare className="h-5 w-5 text-purple-400" />
-              </div>
-              <div className="absolute inset-0 rounded-full bg-purple-400/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-            <span className="text-xs text-purple-400/80 font-medium">刻字</span>
-          </button>
-
           {/* Send Button */}
           <button
             className="group flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-600/5 border border-blue-500/30 hover:border-blue-400/60 hover:from-blue-500/20 hover:to-cyan-600/10 transition-all duration-300 active:scale-95"
@@ -452,22 +467,6 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
               <div className="absolute inset-0 rounded-full bg-blue-400/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
             <span className="text-xs text-blue-400/80 font-medium">{t('action.send')}</span>
-          </button>
-
-          {/* Trade Button */}
-          <button
-            className="group flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-600/5 border border-orange-500/30 hover:border-orange-400/60 hover:from-orange-500/20 hover:to-red-600/10 transition-all duration-300 active:scale-95"
-            onClick={() => {
-              onNavigate('trade')
-            }}
-          >
-            <div className="relative mb-2">
-              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <ArrowUpDown className="h-5 w-5 text-orange-400" />
-              </div>
-              <div className="absolute inset-0 rounded-full bg-orange-400/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-            <span className="text-xs text-orange-400/80 font-medium">{t('action.trade')}</span>
           </button>
         </div>
 
