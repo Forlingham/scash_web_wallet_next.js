@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { analyzeTransaction } from './utils'
 
-const baseUrl = 'https://explorer.scash.network/api/explorer'
+// const baseUrl = 'https://explorer.scash.network/api/explorer'
+const baseUrl = '/api/explorer'
 
 const axiosTool = axios.create({
   baseURL: baseUrl,
@@ -50,7 +51,7 @@ function debounceThrottle<T extends (...args: any[]) => Promise<any>>(fn: T, deb
       }, debounceMs)
 
       debounceTimers.set(key, timer)
-    }) as T
+    }) as ReturnType<T>
   }) as T
 }
 

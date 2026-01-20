@@ -359,8 +359,6 @@ export const useWalletStore = create<WalletState>()(
 
       // 获取币价
       setUpdateCoinPrice: async () => {
-        console.log(233)
-
         try {
           const res = await getCoinPriceApi()
           if (res.data.success) {

@@ -9,14 +9,23 @@ const withPWA = require('next-pwa')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
-
-    return [
-      {
-        source: '/ext/:path*',
-        destination: 'https://scash.tv/ext/:path*',
-      },
-    ]
-
+    if (process.env.NEXT_PUBLIC_BITCOIN_RPC_IS_TESTNET === 'true') {
+      // 测试网络
+      return [
+        {
+          source: '/api/:path*',
+          destination: 'http://127.0.0.1:5100/api/:path*',
+        },
+      ]
+    } else {
+      // 主网
+      return [
+        {
+          source: '/ext/:path*',
+          destination: 'https://scash.tv/ext/:path*',
+        },
+      ]
+    }
   },
   // 修改开发服务器端口
   webpack: (config) => {

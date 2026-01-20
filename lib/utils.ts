@@ -7,6 +7,7 @@ import * as bitcoin from 'bitcoinjs-lib'
 import { Unspent } from './api'
 import { BIP32Interface } from 'bip32'
 import pkg from '../package.json'
+import { getArrFeeAddress, getScashNetwork } from './const'
 
 let dapInstance: any = null
 
@@ -17,6 +18,8 @@ export function getDapInstance() {
 
   if (!dapInstance) {
     try {
+      console.log(SCASH_NETWORK,'SCASH_NETWORK');
+      
       const ScashDAP = require('scash-dap')
       dapInstance = new ScashDAP(SCASH_NETWORK)
     } catch (error) {
@@ -40,17 +43,7 @@ export const VERSION = pkg.version
 
 export const NAME_TOKEN = 'SCASH'
 
-export const SCASH_NETWORK = {
-  messagePrefix: '\x18Scash Signed Message:\n',
-  bech32: 'scash',
-  bip32: {
-    public: 0x0488b21e,
-    private: 0x0488ade4
-  },
-  pubKeyHash: 0x3c,
-  scriptHash: 0x7d,
-  wif: 0x80
-}
+export const SCASH_NETWORK = getScashNetwork()
 
 export const explorerUrl1 = 'https://explorer.scash.network/'
 export const explorerUrl2 = 'https://explorer.scash.network/'
@@ -63,7 +56,7 @@ export function onOpenExplorer(network: string, type: string, id: string) {
   }
 }
 
-export const ARR_FEE_ADDRESS = 'scash1qdq0sa4wxav36k7a4gwxq3k6dk0ahpqfsz8xpvg'
+export const ARR_FEE_ADDRESS = getArrFeeAddress()
 // app 手续费收取标准
 export const APP_FEE_ARR = [
   {
@@ -217,7 +210,7 @@ export function validateScashAddress(address: string) {
   try {
     const decoded = bech32.decode(address)
 
-    if (decoded.prefix !== 'scash') {
+    if (decoded.prefix !== SCASH_NETWORK.bech32) {
       return false
     }
 

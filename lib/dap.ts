@@ -2,7 +2,7 @@
 // 由于 scash-dap 在服务端渲染时会出现动态 require 问题，
 // 我们将初始化延迟到客户端使用时
 
-import { ARR_FEE_ADDRESS } from './utils'
+import { ARR_FEE_ADDRESS, getDapInstance, SCASH_NETWORK } from './utils'
 
 export interface DapMessage {
   content: string
@@ -19,35 +19,6 @@ export interface TransactionOutput {
   addresses?: string[]
   address?: string
   value?: number
-}
-
-let dapInstance: any = null
-
-// 初始化 DAP 实例（客户端专用）
-function getDapInstance() {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  if (!dapInstance) {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const ScashDAP = require('scash-dap')
-      dapInstance = new ScashDAP({
-        messagePrefix: '\x18Scash Signed Message:\n',
-        bech32: 'scash',
-        bip32: { public: 0x0488b21e, private: 0x0488ade4 },
-        pubKeyHash: 0x3c,
-        scriptHash: 0x7d,
-        wif: 0x80
-      })
-    } catch (error) {
-      console.error('初始化 DAP 失败:', error)
-      return null
-    }
-  }
-
-  return dapInstance
 }
 
 // 检测地址是否为 DAP 地址

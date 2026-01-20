@@ -46,19 +46,31 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
   const isIdleRef = useRef<boolean>(false)
 
   const startPolling = () => {
+    let pollInterval = 1000 * 50
+    if (process.env.NEXT_PUBLIC_BITCOIN_RPC_IS_TESTNET === 'true') {
+      pollInterval = 1000 * 10
+    }
+    let chainPollInterval = 1000 * 60 * 3
+    if (process.env.NEXT_PUBLIC_BITCOIN_RPC_IS_TESTNET === 'true') {
+      chainPollInterval = 1000 * 30
+    }
+
     if (walletPollIntervalRef.current == null) {
       walletPollIntervalRef.current = window.setInterval(() => {
         updateGetWalletInfo()
-      }, 1000 * 50)
+      }, pollInterval)
     }
     if (chainPollIntervalRef.current == null) {
       chainPollIntervalRef.current = window.setInterval(() => {
         setUpdateBlockchaininfo()
-      }, 1000 * 60 * 3)
+      }, chainPollInterval)
     }
   }
 
   const stopPolling = () => {
+    if (process.env.NEXT_PUBLIC_BITCOIN_RPC_IS_TESTNET === 'true') {
+      return
+    }
     if (walletPollIntervalRef.current != null) {
       clearInterval(walletPollIntervalRef.current)
       walletPollIntervalRef.current = null
@@ -73,10 +85,13 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
     if (idleTimeoutRef.current != null) {
       clearTimeout(idleTimeoutRef.current)
     }
-    idleTimeoutRef.current = window.setTimeout(() => {
-      isIdleRef.current = true
-      stopPolling()
-    }, 1000 * 60 * 4)
+    idleTimeoutRef.current = window.setTimeout(
+      () => {
+        isIdleRef.current = true
+        stopPolling()
+      },
+      1000 * 60 * 4
+    )
   }
 
   const handleActivity = () => {
@@ -140,12 +155,9 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
         return (
           <div className="flex-1 flex items-center justify-center p-4">
             <div className="text-center">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                交易所
-              </h2>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">交易所</h2>
               <p className="text-gray-400 mb-6">选择一个交易所开始交易 SCASH/USDT</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-xl mx-auto mb-6">
-            
                 <a
                   href="https://www.ourbit.com/zh-CN/exchange/SCASH_USDT"
                   target="_blank"

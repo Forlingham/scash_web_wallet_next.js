@@ -4,7 +4,22 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useLanguage } from '@/contexts/language-context'
-import { ArrowDown, ArrowUp, ArrowUpDown, Menu, Bell, Settings, Clock, X, Database, Wifi, WifiOff, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Menu,
+  Bell,
+  Settings,
+  Clock,
+  X,
+  Database,
+  Wifi,
+  WifiOff,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react'
 import { calcValue, NAME_TOKEN, onOpenExplorer } from '@/lib/utils'
 import { PendingTransaction, Transaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
 import { getAddressTxsExtApi } from '@/lib/externalApi'
@@ -18,7 +33,8 @@ interface WalletHomeProps {
 }
 
 export function WalletHome({ onNavigate }: WalletHomeProps) {
-  const { wallet, coinPrice, unspent, transactions, pendingTransactions, blockchainInfo, confirmations, isLocked, nodeInfo } = useWalletState()
+  const { wallet, coinPrice, unspent, transactions, pendingTransactions, blockchainInfo, confirmations, isLocked, nodeInfo } =
+    useWalletState()
   const { addTransaction, addPendingTransaction, lockWallet } = useWalletActions()
   const { t } = useLanguage()
   const { toast } = useToast()
@@ -26,7 +42,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
   const [getAddressTxsLoading, setGetAddressTxsLoading] = useState<boolean>(false)
   const [explorerConnectionStatus, setExplorerConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking')
   const [explorerResponseTime, setExplorerResponseTime] = useState<number>(0) // 响应时间（毫秒）
-  
+
   // 存储每笔交易的 DAP 消息
   const [dapMessages, setDapMessages] = useState<Map<string, DapMessage>>(new Map())
   const [expandedTxId, setExpandedTxId] = useState<string | null>(null) // 展开的交易 ID
@@ -35,15 +51,15 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
   async function getTxs() {
     if (!wallet.address) return
     if (getAddressTxsLoading) return
-    
+
     const startTime = Date.now() // 记录开始时间
-    
+
     try {
       setGetAddressTxsLoading(true)
       setExplorerConnectionStatus('checking')
-      
+
       const res = await getAddressTxsExtApi(wallet.address)
-      
+
       // 计算响应时间
       const responseTime = Date.now() - startTime
       setExplorerResponseTime(responseTime)
@@ -53,20 +69,20 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
 
       // 解析 DAP 消息
       const newDapMessages = new Map<string, DapMessage>()
-      
+
       for (const tx of res) {
         // 解析 DAP 消息（使用 rawTransaction 中的数据）
         if (tx.rawTransaction) {
           const outputs = tx.rawTransaction.vouts || tx.rawTransaction.receivers || []
           const senderAddress = tx.rawTransaction.senders?.[0]?.address || ''
-          
+
           const dapMessage = parseDapMessage(outputs, senderAddress, wallet.address)
           if (dapMessage) {
             newDapMessages.set(tx.txid, dapMessage)
           }
         }
       }
-      
+
       // 更新 DAP 消息
       setDapMessages(newDapMessages)
 
@@ -87,7 +103,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
             type: type,
             amount: amount,
             address: '',
-            timestamp: new Date(tx.timestamp).getTime() ,
+            timestamp: new Date(tx.timestamp).getTime(),
             status: unspentTx.isUsable ? 'confirmed' : 'pending',
             height: unspentTx.height
           }
@@ -97,7 +113,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
             type: type,
             amount: amount,
             address: '',
-            timestamp: new Date(tx.timestamp).getTime() ,
+            timestamp: new Date(tx.timestamp).getTime(),
             status: 'confirmed',
             height: 0
           }
@@ -121,7 +137,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
     if (explorerConnectionStatus === 'checking') {
       return { strength: 0, color: 'text-yellow-500', bars: 0, label: t('explorer.status.checking') }
     }
-    
+
     // 根据响应时间判断信号质量
     // < 500ms: 极好 (3格)
     // 500-1500ms: 良好 (2格)
@@ -146,7 +162,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
     if (nodeInfo.status === 'checking') {
       return { strength: 0, color: 'text-yellow-500', bars: 0, label: t('node.status.checking') }
     }
-    
+
     if (nodeInfo.responseTime < 500) {
       return { strength: 3, color: 'text-green-500', bars: 3, label: `${t('node.signal.excellent')} (${nodeInfo.responseTime}ms)` }
     } else if (nodeInfo.responseTime < 1500) {
@@ -202,7 +218,15 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
   }
 
   useEffect(() => {
+    let txsIntervalTime = 1000 * 60 * 3
+    if (process.env.NEXT_PUBLIC_BITCOIN_RPC_IS_TESTNET === 'true') {
+      txsIntervalTime = 1000 * 30
+    }
     getTxs()
+    const txsInterval = setTimeout(() => {
+      getTxs()
+    }, txsIntervalTime)
+
     getPendingTxs()
     onLoginExpired()
 
@@ -211,21 +235,22 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
     }
 
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      clearTimeout(txsInterval)
+    }
   }, [wallet.balance, unspent])
 
   return (
     <>
       {/* Fixed Header */}
-      <div className={`fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md shadow-lg transition-all duration-300 ${
-        isScrolled ? 'py-2 border-transparent' : 'py-4 border-b border-purple-500/30'
-      }`}>
-        <div className={`flex justify-between items-center transition-all duration-300 ${
-          isScrolled ? 'px-3' : 'px-4'
-        }`}>
-          <div className={`flex items-center gap-3 transition-all duration-300 ${
-            isScrolled ? 'scale-90' : ''
-          }`}>
+      <div
+        className={`fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md shadow-lg transition-all duration-300 ${
+          isScrolled ? 'py-2 border-transparent' : 'py-4 border-b border-purple-500/30'
+        }`}
+      >
+        <div className={`flex justify-between items-center transition-all duration-300 ${isScrolled ? 'px-3' : 'px-4'}`}>
+          <div className={`flex items-center gap-3 transition-all duration-300 ${isScrolled ? 'scale-90' : ''}`}>
             <div className="relative">
               <img
                 src="https://r2.scash.network/logo.png"
@@ -234,38 +259,38 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                   isScrolled ? 'w-8 h-8' : 'w-10 h-10'
                 }`}
               />
-              <div className={`absolute -top-1 -right-1 bg-green-400 rounded-full border-2 border-gray-900 transition-all duration-300 ${
-                isScrolled ? 'w-2.5 h-2.5' : 'w-3 h-3'
-              }`}></div>
+              <div
+                className={`absolute -top-1 -right-1 bg-green-400 rounded-full border-2 border-gray-900 transition-all duration-300 ${
+                  isScrolled ? 'w-2.5 h-2.5' : 'w-3 h-3'
+                }`}
+              ></div>
             </div>
-            <div className={`transition-all duration-300 ${
-              isScrolled ? 'opacity-0 hidden' : ''
-            }`}>
+            <div className={`transition-all duration-300 ${isScrolled ? 'opacity-0 hidden' : ''}`}>
               <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 {t('wallet.title')}
               </h1>
               <div className="text-xs text-gray-400">{t('wallet.subtitle')}</div>
             </div>
-            <div className={`transition-all duration-300 ${
-              isScrolled ? 'opacity-100' : 'opacity-0 hidden'
-            }`}>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                SCASH Wallet
-              </h1>
+            <div className={`transition-all duration-300 ${isScrolled ? 'opacity-100' : 'opacity-0 hidden'}`}>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">SCASH Wallet</h1>
             </div>
           </div>
-          <div className={`flex items-center gap-3 transition-all duration-300 ${
-            isScrolled ? 'scale-90' : ''
-          }`}>
-            <div className={`bg-purple-500/10 border border-purple-500/20 rounded-lg transition-all duration-300 ${
-              isScrolled ? 'px-2 py-0.5' : 'px-3 py-1.5'
-            }`}>
-              <div className="text-purple-300 font-medium transition-all duration-300 ${
+          <div className={`flex items-center gap-3 transition-all duration-300 ${isScrolled ? 'scale-90' : ''}`}>
+            <div
+              className={`bg-purple-500/10 border border-purple-500/20 rounded-lg transition-all duration-300 ${
+                isScrolled ? 'px-2 py-0.5' : 'px-3 py-1.5'
+              }`}
+            >
+              <div
+                className="text-purple-300 font-medium transition-all duration-300 ${
                 isScrolled ? 'text-[9px]' : 'text-xs'
-              }">{t('wallet.blockHeight')}</div>
-              <div className={`text-white font-semibold transition-all duration-300 ${
-                isScrolled ? 'text-[10px]' : 'text-sm'
-              }`}>{blockchainInfo.headers.toLocaleString()}</div>
+              }"
+              >
+                {t('wallet.blockHeight')}
+              </div>
+              <div className={`text-white font-semibold transition-all duration-300 ${isScrolled ? 'text-[10px]' : 'text-sm'}`}>
+                {blockchainInfo.headers.toLocaleString()}
+              </div>
             </div>
             <Button
               variant="ghost"
@@ -280,9 +305,11 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
       </div>
 
       {/* Simplified Balance - Shows when scrolled past balance card */}
-      <div className={`fixed top-[60px] left-0 right-0 z-40 bg-gray-900/98 backdrop-blur-md shadow-lg transition-all duration-300 ${
-        isScrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
-      }`}>
+      <div
+        className={`fixed top-[60px] left-0 right-0 z-40 bg-gray-900/98 backdrop-blur-md shadow-lg transition-all duration-300 ${
+          isScrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+        }`}
+      >
         <div className="px-4 py-2.5">
           <div className="grid grid-cols-3 gap-3 text-xs">
             <div className="bg-green-500/5 rounded-lg p-2 text-center">
@@ -302,30 +329,24 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
       </div>
 
       {/* Main Content with top padding for fixed header */}
-      <div className={`pt-20 flex-1 p-4 space-y-4 overflow-y-auto transition-all duration-300 ${
-        isScrolled ? 'mt-0' : 'mt-10'
-      }`}>
+      <div className={`pt-20 flex-1 p-4 space-y-4 overflow-y-auto transition-all duration-300 ${isScrolled ? 'mt-0' : 'mt-10'}`}>
         <Card className="relative bg-gradient-to-br from-purple-900/20 via-gray-800 to-purple-800/30 border-purple-500/30 backdrop-blur-sm overflow-hidden">
           {/* 节点连接状态栏 - 浮动在左上角 */}
           <div className="absolute top-3 left-6 z-20 flex items-center gap-2">
             <div className="relative group">
-              {nodeInfo.status === 'disconnected' && (
-                <WifiOff className="h-3.5 w-3.5 text-red-500" />
-              )}
-              
+              {nodeInfo.status === 'disconnected' && <WifiOff className="h-3.5 w-3.5 text-red-500" />}
+
               {nodeInfo.status === 'checking' && (
                 <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-yellow-500/30 border-t-yellow-500"></div>
               )}
-              
+
               {nodeInfo.status === 'connected' && (
                 <div className="flex items-end gap-0.5">
                   {[1, 2, 3].map((bar) => (
                     <div
                       key={bar}
                       className={`w-1 rounded-sm transition-all ${
-                        bar <= getNodeSignalStrength().bars
-                          ? getNodeSignalStrength().color.replace('text-', 'bg-')
-                          : 'bg-gray-600'
+                        bar <= getNodeSignalStrength().bars ? getNodeSignalStrength().color.replace('text-', 'bg-') : 'bg-gray-600'
                       }`}
                       style={{ height: `${bar * 3.5}px` }}
                     />
@@ -334,12 +355,8 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
               )}
             </div>
 
-            {nodeInfo.status === 'disconnected' && (
-              <span className="text-xs text-red-400">{t('node.status.disconnected')}</span>
-            )}
-            {nodeInfo.status === 'checking' && (
-              <span className="text-xs text-yellow-400">{t('node.status.checking')}</span>
-            )}
+            {nodeInfo.status === 'disconnected' && <span className="text-xs text-red-400">{t('node.status.disconnected')}</span>}
+            {nodeInfo.status === 'checking' && <span className="text-xs text-yellow-400">{t('node.status.checking')}</span>}
             {nodeInfo.status === 'connected' && (
               <span className="text-xs text-gray-400">
                 {t('node.status.connected')}: <span className={getNodeSignalStrength().color}>{getNodeSignalStrength().label}</span>
@@ -460,14 +477,12 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
             {/* 状态栏 - 区块浏览器连接状态 */}
             <div className="flex items-center gap-2 pt-3 pb-2">
               <div className="relative group">
-                {explorerConnectionStatus === 'disconnected' && (
-                  <WifiOff className="h-3.5 w-3.5 text-red-500" />
-                )}
-                
+                {explorerConnectionStatus === 'disconnected' && <WifiOff className="h-3.5 w-3.5 text-red-500" />}
+
                 {explorerConnectionStatus === 'checking' && (
                   <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-yellow-500/30 border-t-yellow-500"></div>
                 )}
-                
+
                 {explorerConnectionStatus === 'connected' && (
                   <div className="flex items-end gap-0.5">
                     {/* 信号强度条 */}
@@ -475,9 +490,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                       <div
                         key={bar}
                         className={`w-1 rounded-sm transition-all ${
-                          bar <= getSignalStrength().bars
-                            ? getSignalStrength().color.replace('text-', 'bg-')
-                            : 'bg-gray-600'
+                          bar <= getSignalStrength().bars ? getSignalStrength().color.replace('text-', 'bg-') : 'bg-gray-600'
                         }`}
                         style={{ height: `${bar * 3.5}px` }}
                       />
@@ -486,19 +499,17 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                 )}
               </div>
 
-            {/* 状态文字提示 - 直接显示在信号后面 */}
-            {explorerConnectionStatus === 'disconnected' && (
-              <span className="text-xs text-red-400">{t('explorer.status.disconnected')}</span>
-            )}
-            {explorerConnectionStatus === 'checking' && (
-              <span className="text-xs text-yellow-400">{t('explorer.status.checking')}</span>
-            )}
-            {explorerConnectionStatus === 'connected' && (
-              <span className="text-xs text-gray-400">
-                {t('explorer.status.connected')}: <span className={getSignalStrength().color}>{getSignalStrength().label}</span>
-              </span>
-            )}
-          </div>
+              {/* 状态文字提示 - 直接显示在信号后面 */}
+              {explorerConnectionStatus === 'disconnected' && (
+                <span className="text-xs text-red-400">{t('explorer.status.disconnected')}</span>
+              )}
+              {explorerConnectionStatus === 'checking' && <span className="text-xs text-yellow-400">{t('explorer.status.checking')}</span>}
+              {explorerConnectionStatus === 'connected' && (
+                <span className="text-xs text-gray-400">
+                  {t('explorer.status.connected')}: <span className={getSignalStrength().color}>{getSignalStrength().label}</span>
+                </span>
+              )}
+            </div>
 
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-white font-medium">{t('transactions.recent')}</h3>
@@ -566,110 +577,119 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
               {transactions.map((tx) => {
                 const dapMessage = dapMessages.get(tx.id)
                 const isExpanded = expandedTxId === tx.id
-                
+
                 return (
-                <div key={tx.id} className=" p-3 bg-gray-900 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors">
-                  <div className="flex items-center justify-between ">
-                    <div className="flex items-center gap-3">
-                      {tx.status === 'pending' && (
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-orange-500">
-                          <Clock className="h-4 w-4 text-white" />
-                        </div>
-                      )}
-                      {tx.status === 'confirmed' && (
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            tx.type === 'receive' ? 'bg-green-500' : 'bg-red-500'
-                          }`}
-                        >
-                          {tx.type === 'receive' ? (
-                            <ArrowDown className="h-4 w-4 text-white" />
-                          ) : (
-                            <ArrowUp className="h-4 w-4 text-white" />
-                          )}
-                        </div>
-                      )}
-                      {tx.status === 'failed' && (
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-500">
-                          <X className="h-4 w-4 text-white" />
-                        </div>
-                      )}
+                  <div key={tx.id} className=" p-3 bg-gray-900 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors">
+                    <div className="flex items-center justify-between ">
+                      <div className="flex items-center gap-3">
+                        {tx.status === 'pending' && (
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-orange-500">
+                            <Clock className="h-4 w-4 text-white" />
+                          </div>
+                        )}
+                        {tx.status === 'confirmed' && (
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              tx.type === 'receive' ? 'bg-green-500' : 'bg-red-500'
+                            }`}
+                          >
+                            {tx.type === 'receive' ? (
+                              <ArrowDown className="h-4 w-4 text-white" />
+                            ) : (
+                              <ArrowUp className="h-4 w-4 text-white" />
+                            )}
+                          </div>
+                        )}
+                        {tx.status === 'failed' && (
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-500">
+                            <X className="h-4 w-4 text-white" />
+                          </div>
+                        )}
 
+                        <div>
+                          <p className="text-white font-medium">
+                            {tx.type === 'receive' ? t('transactions.received') : t('transactions.sent')} {NAME_TOKEN}
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            {tx.id.slice(0, 6)}····{tx.id.slice(-6)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-medium ${tx.type === 'receive' ? 'text-green-400' : 'text-red-400'}`}>
+                          {tx.amount > 0 ? '+' + tx.amount : tx.amount}
+                        </p>
+                        <p className="text-gray-400 text-sm">${calcValue(tx.amount, coinPrice)} USD</p>
+                      </div>
+                    </div>
+
+                    {/* DAP 消息显示 */}
+                    {dapMessage && (
+                      <div className="mt-3 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <MessageSquare className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-purple-300 text-xs font-medium mb-1">
+                              {dapMessage.isFromSelf
+                                ? dapMessage.isPureMessage
+                                  ? t('dap.myNote')
+                                  : t('dap.transferNote')
+                                : dapMessage.isPureMessage
+                                  ? t('dap.receivedNote')
+                                  : t('dap.senderNote')}
+                            </p>
+                            <p className="text-gray-300 text-sm break-words">
+                              {isExpanded ? dapMessage.content : formatDapPreview(dapMessage.content, 100)}
+                            </p>
+                            {dapMessage.content.length > 100 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setExpandedTxId(isExpanded ? null : tx.id)
+                                }}
+                                className="text-purple-400 text-xs hover:text-purple-300 mt-2 flex items-center gap-1"
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    <ChevronUp className="h-3 w-3" /> {t('dap.collapse')}
+                                  </>
+                                ) : (
+                                  <>
+                                    <ChevronDown className="h-3 w-3" /> {t('dap.expand')}
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between border-t border-gray-700 mt-3">
                       <div>
-                        <p className="text-white font-medium">
-                          {tx.type === 'receive' ? t('transactions.received') : t('transactions.sent')} {NAME_TOKEN}
-                        </p>
-                        <p className="text-gray-400 text-sm">
-                          {tx.id.slice(0, 6)}····{tx.id.slice(-6)}
-                        </p>
+                        {/* 交易时间，时间戳转换成 月、日  时分秒 */}
+                        <span className="text-gray-400 text-sm">{new Date(tx.timestamp).toLocaleString()}</span>
+                        {tx.status === 'pending' && (
+                          <span className="text-orange-500 text-xs ml-5 whitespace-nowrap">
+                            {t('transactions.confirmations')}: {confirmations} / {blockchainInfo.headers - tx.height}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        {/* 打开区块浏览器查看详情 */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-green-400 hover:text-green-300"
+                          onClick={() => onOpenExplorer('2', 'tx', tx.id)}
+                        >
+                          {t('transactions.particulars')}
+                        </Button>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className={`font-medium ${tx.type === 'receive' ? 'text-green-400' : 'text-red-400'}`}>
-                        {tx.amount > 0 ? '+' + tx.amount : tx.amount}
-                      </p>
-                      <p className="text-gray-400 text-sm">${calcValue(tx.amount, coinPrice)} USD</p>
-                    </div>
                   </div>
-
-                  {/* DAP 消息显示 */}
-                  {dapMessage && (
-                    <div className="mt-3 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <MessageSquare className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-purple-300 text-xs font-medium mb-1">
-                            {dapMessage.isFromSelf 
-                              ? (dapMessage.isPureMessage ? t('dap.myNote') : t('dap.transferNote')) 
-                              : (dapMessage.isPureMessage ? t('dap.receivedNote') : t('dap.senderNote'))}
-                          </p>
-                          <p className="text-gray-300 text-sm break-words">
-                            {isExpanded ? dapMessage.content : formatDapPreview(dapMessage.content, 100)}
-                          </p>
-                          {dapMessage.content.length > 100 && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setExpandedTxId(isExpanded ? null : tx.id)
-                              }}
-                              className="text-purple-400 text-xs hover:text-purple-300 mt-2 flex items-center gap-1"
-                            >
-                              {isExpanded ? (
-                                <><ChevronUp className="h-3 w-3" /> {t('dap.collapse')}</>
-                              ) : (
-                                <><ChevronDown className="h-3 w-3" /> {t('dap.expand')}</>
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between border-t border-gray-700 mt-3">
-                    <div>
-                      {/* 交易时间，时间戳转换成 月、日  时分秒 */}
-                      <span className="text-gray-400 text-sm">{new Date(tx.timestamp).toLocaleString()}</span>
-                      {tx.status === 'pending' && (
-                        <span className="text-orange-500 text-xs ml-5 whitespace-nowrap">
-                          {t('transactions.confirmations')}: {confirmations} / {blockchainInfo.headers - tx.height}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      {/* 打开区块浏览器查看详情 */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-green-400 hover:text-green-300"
-                        onClick={() => onOpenExplorer('2', 'tx', tx.id)}
-                      >
-                        {t('transactions.particulars')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )})}
+                )
+              })}
             </div>
           </CardContent>
         </Card>
