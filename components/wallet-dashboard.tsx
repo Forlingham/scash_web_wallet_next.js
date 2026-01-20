@@ -108,19 +108,33 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
     initGetWalletInfo()
     startPolling()
     resetIdleTimer()
+
+    const handleScroll = (e?: Event) => {
+      handleActivity()
+    }
+
     window.addEventListener('click', handleActivity, { passive: true })
-    window.addEventListener('scroll', handleActivity, { passive: true })
     window.addEventListener('keydown', handleActivity)
     window.addEventListener('touchstart', handleActivity, { passive: true })
+
+    const container = document.getElementById('wallet-scroll-container')
+    if (container) {
+      container.addEventListener('scroll', handleActivity, { passive: true })
+    }
+    window.addEventListener('scroll', handleActivity, { passive: true })
+
     return () => {
       stopPolling()
       if (idleTimeoutRef.current != null) {
         clearTimeout(idleTimeoutRef.current)
       }
       window.removeEventListener('click', handleActivity)
-      window.removeEventListener('scroll', handleActivity)
       window.removeEventListener('keydown', handleActivity)
       window.removeEventListener('touchstart', handleActivity)
+      if (container) {
+        container.removeEventListener('scroll', handleActivity)
+      }
+      window.removeEventListener('scroll', handleActivity)
     }
   }, [])
 
@@ -192,9 +206,9 @@ export function WalletDashboard({ onLogout }: WalletDashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col">
+    <div className="min-h-full bg-gray-900 flex flex-col">
       {currentView !== 'home' && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-purple-500/30 shadow-lg overflow-visible">
+        <div className="absolute top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-purple-500/30 shadow-lg overflow-visible">
           <div className="flex justify-between items-center p-4 container mx-auto overflow-visible">
             <div className="flex items-center gap-3">
               <Button

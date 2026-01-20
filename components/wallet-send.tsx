@@ -545,8 +545,8 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
 
   if (step === 'success') {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 min-h-screen">
-        <div className="w-full max-w-md mx-auto">
+      <div className="min-h-full bg-gray-900 flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md">
           <div className="text-center space-y-6">
             {/* Success Icon with purple logo-inspired styling */}
             <div className="relative">

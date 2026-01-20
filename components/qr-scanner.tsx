@@ -528,7 +528,7 @@ export function QRScannerComponent({ isOpen, onClose, onScanResult }: QRScannerP
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-gray-900 border-gray-700">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">

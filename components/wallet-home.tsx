@@ -231,11 +231,22 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
     onLoginExpired()
 
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
+      const container = document.getElementById('wallet-scroll-container')
+      const scrollTop = container ? container.scrollTop : 0
+      const windowScroll = window.scrollY
+      setIsScrolled(scrollTop > 50 || windowScroll > 50)
     }
 
+    const container = document.getElementById('wallet-scroll-container')
+    if (container) {
+      container.addEventListener('scroll', handleScroll)
+    }
     window.addEventListener('scroll', handleScroll)
+    
     return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll)
+      }
       window.removeEventListener('scroll', handleScroll)
       clearTimeout(txsInterval)
     }
@@ -245,7 +256,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
     <>
       {/* Fixed Header */}
       <div
-        className={`fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md shadow-lg transition-all duration-300 ${
+        className={`absolute top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md shadow-lg transition-all duration-300 ${
           isScrolled ? 'py-2 border-transparent' : 'py-4 border-b border-purple-500/30'
         }`}
       >
@@ -282,9 +293,9 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
               }`}
             >
               <div
-                className="text-purple-300 font-medium transition-all duration-300 ${
-                isScrolled ? 'text-[9px]' : 'text-xs'
-              }"
+                className={`text-purple-300 font-medium transition-all duration-300 ${
+                isScrolled ? 'text-[14px]' : 'text-xs'
+              }`}
               >
                 {t('wallet.blockHeight')}
               </div>
@@ -306,7 +317,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
 
       {/* Simplified Balance - Shows when scrolled past balance card */}
       <div
-        className={`fixed top-[60px] left-0 right-0 z-40 bg-gray-900/98 backdrop-blur-md shadow-lg transition-all duration-300 ${
+        className={`absolute top-[55px] left-0 right-0 z-40 bg-gray-900/98 backdrop-blur-md shadow-lg transition-all duration-300 ${
           isScrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
         }`}
       >

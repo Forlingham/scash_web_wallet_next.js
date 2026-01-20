@@ -39,7 +39,7 @@ export function ToastDemo() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
+    <div className="min-h-full bg-gray-900 p-8">
       <Card className="max-w-2xl mx-auto bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-white">Toast 通知组件演示</CardTitle>

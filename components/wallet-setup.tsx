@@ -321,7 +321,7 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col">
+    <div className="min-h-full bg-gray-900 flex flex-col">
       {/* Header with Language Selector */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center gap-3">

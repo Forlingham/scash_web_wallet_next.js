@@ -286,8 +286,8 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
 
   if (step === 'success') {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 min-h-screen">
-        <div className="w-full max-w-md mx-auto">
+      <div className="min-h-full bg-gray-900 flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md">
           <div className="text-center space-y-6">
             <div className="relative">
               <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-500 rounded-full flex items-center justify-center mx-auto shadow-2xl border-2 border-purple-400">

@@ -35,7 +35,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-full bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
       </div>
     )
@@ -43,7 +43,7 @@ export default function Home() {
 
   return (
     <LanguageProvider>
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-full bg-gray-900">
         {!wallet.address ? (
           <WalletSetup onWalletCreated={handleWalletCreated} />
         ) : isLocked ? (
