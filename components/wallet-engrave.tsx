@@ -1,11 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { useLanguage } from '@/contexts/language-context'
-import { ArrowLeft, Lock, ExternalLink, MessageSquare } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,26 +11,30 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { useLanguage } from '@/contexts/language-context'
 import { useToast } from '@/hooks/use-toast'
+import { onBroadcastApi, Unspent } from '@/lib/api'
 import {
   calcFee,
   calcValue,
   decryptWallet,
+  getDapInstance,
   NAME_TOKEN,
+  onOpenExplorer,
   SCASH_NETWORK,
   signTransaction,
-  ARR_FEE_ADDRESS,
-  onOpenExplorer,
-  sleep,
-  getDapInstance
+  sleep
 } from '@/lib/utils'
 import { PendingTransaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
-import { onBroadcastApi, Unspent } from '@/lib/api'
-import Decimal from 'decimal.js'
-import * as bip39 from 'bip39'
 import { BIP32Factory } from 'bip32'
+import * as bip39 from 'bip39'
+import Decimal from 'decimal.js'
+import { ArrowLeft, ExternalLink, Lock, MessageSquare } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import * as ecc from 'tiny-secp256k1'
-
 interface WalletEngraveProps {
   onNavigate: (view: string) => void
 }
@@ -304,8 +302,8 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold text-white tracking-tight">刻字成功!</h2>
-              <p className="text-purple-300 text-sm">您的文字已永久刻在区块链上</p>
+              <h2 className="text-3xl font-bold text-white tracking-tight">{t('send.engraveSuccess')}</h2>
+              <p className="text-purple-300 text-sm">{t('send.engraveSuccessMsg')}</p>
             </div>
 
             {currentPendingTransaction && (
@@ -326,26 +324,26 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
 
                 <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-xl p-4 border border-purple-600/30 backdrop-blur-sm">
                   <div className="text-center">
-                    <p className="text-purple-300 text-xs uppercase tracking-wide mb-2">刻字内容</p>
+                    <p className="text-purple-300 text-xs uppercase tracking-wide mb-2">{t('send.engraveContent')}</p>
                     <p className="text-white text-lg font-semibold break-words">{engraveText}</p>
                   </div>
                 </div>
 
                 <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-600/30 backdrop-blur-sm">
                   <div className="flex justify-between text-sm">
-                    <span className="text-purple-300">刻字损耗:</span>
+                    <span className="text-purple-300">{t('send.engraveLoss')}:</span>
                     <span className="text-white">
                       {dapInfo?.dapAmount.toFixed(8)} {NAME_TOKEN}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm mt-2">
-                    <span className="text-purple-300">网络手续费:</span>
+                    <span className="text-purple-300">{t('send.engraveNetworkFee')}:</span>
                     <span className="text-white">
                       {networkFee.toFixed(8)} {NAME_TOKEN}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm mt-2">
-                    <span className="text-purple-300">平台手续费:</span>
+                    <span className="text-purple-300">{t('send.engravePlatformFee')}:</span>
                     <span className="text-white">
                       {appFee.toFixed(8)} {NAME_TOKEN}
                     </span>
@@ -379,32 +377,32 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
         <Card className="bg-gray-800 border-gray-700">
           <CardContent className="px-4 space-y-4">
             <div className="flex justify-between">
-              <span className="text-gray-400">从:</span>
+              <span className="text-gray-400">{t('send.engraveFrom')}</span>
               <span className="text-white font-mono text-sm">
                 {wallet.address.slice(0, 10)}...{wallet.address.slice(-10)}
               </span>
             </div>
 
             <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-600/30">
-              <p className="text-purple-300 text-xs uppercase tracking-wide mb-1">刻字内容:</p>
+              <p className="text-purple-300 text-xs uppercase tracking-wide mb-1">{t('send.engraveContent')}:</p>
               <p className="text-white text-sm break-words">{engraveText}</p>
             </div>
 
             <div className="space-y-2 border-t border-gray-600 pt-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">刻字损耗:</span>
+                <span className="text-gray-400">{t('send.engraveLoss')}:</span>
                 <span className="text-white">
                   {dapInfo?.dapAmount.toFixed(8)} {NAME_TOKEN}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">网络手续费:</span>
+                <span className="text-gray-400">{t('send.engraveNetworkFee')}:</span>
                 <span className="text-white">
                   {networkFee.toFixed(8)} {NAME_TOKEN}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">平台手续费:</span>
+                <span className="text-gray-400">{t('send.engravePlatformFee')}:</span>
                 <span className="text-white">
                   {appFee.toFixed(8)} {NAME_TOKEN}
                 </span>
@@ -459,9 +457,9 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
             <AlertDialogHeader>
               <AlertDialogTitle className="text-white">{t('send.confirm')}</AlertDialogTitle>
               <AlertDialogDescription className="text-gray-300">
-                确认将文字 "{engraveText}" 刻在区块链上吗？此操作不可撤销。
+                {t('send.confirmTransactionInfo')}
                 <br />
-                总费用: {totalFee.toFixed(8)} {NAME_TOKEN}
+                {t('send.total')}: {totalFee.toFixed(8)} {NAME_TOKEN}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -495,49 +493,47 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
               <MessageSquare className="h-8 w-8 text-white" />
             </div>
             <p className="text-gray-300 text-sm">
-              将您的文字永久刻在区块链上，
-              <br />
-              让它永远无法被篡改或删除
+              {t('send.engraveDesc')}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-purple-400">刻字内容</Label>
+            <Label className="text-purple-400">{t('send.engraveText')}</Label>
             <textarea
               value={engraveText}
               onChange={(e) => setEngraveText(e.target.value)}
-              placeholder="输入您想永久保存的文字..."
+              placeholder={t('send.engravePlaceholder')}
               className="w-full bg-gray-900 text-white border border-gray-600 rounded-lg p-3 resize-none h-32 focus:outline-none focus:border-purple-400"
             />
-            <div className="text-right text-xs text-gray-400">{engraveText.length} 字符</div>
+            <div className="text-right text-xs text-gray-400">{engraveText.length} {t('send.engraveChunkCount').toLowerCase()}</div>
           </div>
 
           {dapInfo && (
             <div className="bg-gray-900/50 rounded-lg p-3 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">刻字损耗:</span>
+                <span className="text-gray-400">{t('send.engraveLoss')}:</span>
                 <span className="text-white">
                   {dapInfo.dapAmount.toFixed(8)} {NAME_TOKEN}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">分片数量:</span>
-                <span className="text-white">{dapInfo.chunkCount} 个</span>
+                <span className="text-gray-400">{t('send.engraveChunkCount')}:</span>
+                <span className="text-white">{dapInfo.chunkCount}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">网络手续费:</span>
+                <span className="text-gray-400">{t('send.engraveNetworkFee')}:</span>
                 <span className="text-white">
                   {networkFee.toFixed(8)} {NAME_TOKEN}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">平台手续费:</span>
+                <span className="text-gray-400">{t('send.engravePlatformFee')}:</span>
                 <span className="text-white">
                   {appFee.toFixed(8)} {NAME_TOKEN}
                 </span>
               </div>
               <div className="flex justify-between text-sm font-semibold border-t border-gray-600 pt-2">
-                <span className="text-gray-300">总费用:</span>
+                <span className="text-gray-300">{t('send.totalFee')}:</span>
                 <span className="text-white">
                   {totalFee.toFixed(8)} {NAME_TOKEN}
                 </span>
@@ -549,7 +545,7 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
       </Card>
 
       {totalFee > 0 && pickUnspents.length === 0 && (
-        <div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-700 rounded-lg p-2">余额不足，无法完成刻字</div>
+        <div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-700 rounded-lg p-2">{t('send.engraveInsufficient')}</div>
       )}
 
       <Button
@@ -563,7 +559,7 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
             <span>...</span>
           </div>
         ) : (
-          '确认刻字'
+          t('send.engraveButton')
         )}
       </Button>
     </div>
