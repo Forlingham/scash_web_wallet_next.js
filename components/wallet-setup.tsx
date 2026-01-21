@@ -193,8 +193,8 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
     setWallet(walletInfo)
 
     toast({
-      title: 'Wallet Created Successfully',
-      description: 'Your wallet file has been downloaded. Keep it safe!'
+      title: t('wallet.walletCreatedSuccessfully'),
+      description: t('wallet.walletDownloadedSuccessfully')
     })
 
     onWalletCreated()
@@ -411,9 +411,11 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
         <div className="relative">
           <div className={`grid grid-cols-3 gap-3 p-4 bg-gray-900/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-x-auto ${!showMnemonic ? 'blur-sm' : ''}`}>
             {generatedMnemonic.split(' ').map((word, index) => (
-              <div key={index} className="flex items-center gap-2 p-2.5 bg-gray-800/80 rounded-lg border border-gray-700/50 min-w-0">
-                <span className="text-gray-500 text-xs font-mono flex-shrink-0">{String(index + 1).padStart(2, '0')}</span>
-                <span className="text-white font-medium text-sm whitespace-nowrap flex-shrink-0">{word}</span>
+              <div key={index} className="relative flex items-center justify-center py-2 mt-3 bg-gray-800/80 rounded-lg border border-gray-700/50 min-w-0">
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 text-gray-500 text-xs font-mono px-2 py-0 rounded-full border border-gray-700/50 shadow-sm">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span className="text-white font-medium text-sm whitespace-nowrap">{word}</span>
               </div>
             ))}
           </div>
@@ -605,7 +607,7 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
       <div className="p-4 bg-gray-900/80 rounded-xl border border-gray-700/50">
         <div className="flex items-center justify-center gap-3 text-sm text-gray-400">
           <FileKey className="w-5 h-5" />
-          <span>Your wallet file is ready for download</span>
+          <span>{t('wallet.walletFileReady')}</span>
         </div>
       </div>
 
