@@ -27,6 +27,7 @@ import { parseDapMessage, formatDapPreview, type DapMessage } from '@/lib/dap'
 import Decimal from 'decimal.js'
 import { getRawTransactionApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
+import { MarkdownRenderer } from './markdown-renderer'
 
 interface WalletHomeProps {
   onNavigate: (view: string) => void
@@ -648,9 +649,11 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                                   ? t('dap.receivedNote')
                                   : t('dap.senderNote')}
                             </p>
-                            <p className="text-gray-300 text-sm break-words">
-                              {isExpanded ? dapMessage.content : formatDapPreview(dapMessage.content, 100)}
-                            </p>
+                            <div className="text-gray-300 text-sm break-words">
+                              <MarkdownRenderer>
+                                {isExpanded ? dapMessage.content : formatDapPreview(dapMessage.content, 100)}
+                              </MarkdownRenderer>
+                            </div>
                             {dapMessage.content.length > 100 && (
                               <button
                                 onClick={(e) => {

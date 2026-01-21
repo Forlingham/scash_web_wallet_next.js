@@ -118,6 +118,7 @@ const translations = {
     'dap.senderNote': 'Sender Note',
     'dap.expand': 'Expand to view full content',
     'dap.collapse': 'Collapse',
+    'dap.preview': "Preview",
 
     // Settings
     'settings.title': 'Settings',
@@ -281,6 +282,9 @@ const translations = {
     'common.contactSupportDesc': 'Need additional help? Contact our support team for personalized assistance.',
     'common.contactSupportGitHub': 'Contact Support on GitHub',
     'common.contactSupportTwitter': 'Contact Support on Twitter',
+    'common.externalLink': 'External Link',
+    'common.externalLinkInfo': 'You are about to leave the app and visit:',
+    'common.continue': 'Continue',
 
     'safety.instructions': `
     <section>
@@ -460,6 +464,7 @@ const translations = {
     'dap.senderNote': '对方备注',
     'dap.expand': '展开查看完整内容',
     'dap.collapse': '收起',
+    'dap.preview':"预览",
 
     // Settings
     'settings.title': '设置',
@@ -622,6 +627,9 @@ const translations = {
     'common.contactSupportDesc': '遇到问题可以在GitHub上进行提交和在Telegram群中进行留言。',
     'common.contactSupportGitHub': 'GitHub项目',
     'common.contactSupportTwitter': '开发者推特',
+    'common.externalLink': '外部链接',
+    'common.externalLinkInfo': '您即将离开应用并访问：',
+    'common.continue': '继续访问',
 
     'safety.instructions': `
     <section>
@@ -802,6 +810,7 @@ const translations = {
     'dap.senderNote': 'Сообщение отправителя',
     'dap.expand': 'Развернуть для просмотра полного текста',
     'dap.collapse': 'Свернуть',
+    'dap.preview': "Предпросмотр",
 
     // Settings
     'settings.title': 'Настройки',
@@ -964,6 +973,9 @@ const translations = {
     'common.contactSupportDesc': 'Если у вас возникли проблемы, вы можете связаться с нашей поддержкой через GitHub или Telegram.',
     'common.contactSupportGitHub': 'Связаться с поддержкой на GitHub',
     'common.contactSupportTwitter': 'Связаться с поддержкой на Twitter',
+    'common.externalLink': 'Внешняя ссылка',
+    'common.externalLinkInfo': 'Вы собираетесь покинуть приложение и перейти:',
+    'common.continue': 'Продолжить',
 
     'safety.instructions': `
     <section>

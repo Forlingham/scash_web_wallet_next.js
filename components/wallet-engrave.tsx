@@ -31,8 +31,9 @@ import {
 } from '@/lib/utils'
 import { PendingTransaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
 import Decimal from 'decimal.js'
-import { ArrowLeft, ExternalLink, Lock, MessageSquare } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Lock, MessageSquare, Eye } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { MarkdownRenderer } from './markdown-renderer'
 interface WalletEngraveProps {
   onNavigate: (view: string) => void
 }
@@ -57,6 +58,7 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
   const [passwordError, setPasswordError] = useState<string>('')
   const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false)
   const [currentPendingTransaction, setCurrentPendingTransaction] = useState<PendingTransaction>()
+  const [showPreview, setShowPreview] = useState<boolean>(false)
 
   async function getInitData() {
     setIsLoading(true)
@@ -492,13 +494,32 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-purple-400">{t('send.engraveText')}</Label>
+            <div className="flex justify-between items-center">
+              <Label className="text-purple-400">{t('send.engraveText')}</Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+                className="h-6 px-2 text-xs text-purple-400 hover:text-purple-300 hover:bg-purple-900/30"
+              >
+                <Eye className="w-3 h-3 mr-1" />
+                {showPreview ? t('dap.collapse') : t('dap.preview')}
+              </Button>
+            </div>
             <textarea
               value={engraveText}
               onChange={(e) => setEngraveText(e.target.value)}
               placeholder={t('send.engravePlaceholder')}
               className="w-full bg-gray-900 text-white border border-gray-600 rounded-lg p-3 resize-none h-32 focus:outline-none focus:border-purple-400"
             />
+            {showPreview && engraveText && (
+              <div className="mt-2 p-3 bg-gray-900/50 border border-gray-600 rounded-lg">
+                <p className="text-xs text-gray-500 mb-2">{t('dap.preview')}:</p>
+                <div className="text-gray-300 text-sm break-words">
+                  <MarkdownRenderer>{engraveText}</MarkdownRenderer>
+                </div>
+              </div>
+            )}
             <div className="text-right text-xs text-gray-400">{engraveText.length} {t('send.engraveChunkCount').toLowerCase()}</div>
           </div>
 
