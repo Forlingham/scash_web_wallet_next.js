@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { analyzeTransaction } from './utils'
 
-// const baseUrl = 'https://explorer.scash.network/api/explorer'
-const baseUrl = '/api/explorer'
+let baseUrl = 'https://explorer.scash.network/api/explorer'
+if (process.env.NEXT_PUBLIC_BITCOIN_RPC_IS_TESTNET === 'true') {
+  baseUrl = '/api/explorer'
+}
 
 const axiosTool = axios.create({
   baseURL: baseUrl,
@@ -64,7 +66,7 @@ const _getAddressTxsExtApi = async (address: string) => {
 
   // 同时返回分析后的交易和原始交易数据（用于 DAP 解析）
   const analyzedTransactions = transactions.map((tx) => analyzeTransaction(tx, address))
-  
+
   // 返回带原始数据的交易信息
   const transactionsWithRaw = analyzedTransactions.map((analyzed, index) => ({
     ...analyzed,

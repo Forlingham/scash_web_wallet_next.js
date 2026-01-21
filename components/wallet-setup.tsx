@@ -4,7 +4,7 @@ import type React from 'react'
 
 import { LanguageSelector } from '@/components/language-selector'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -22,7 +22,21 @@ import {
 import { useWalletActions, useWalletStore, type WalletInfo } from '@/stores/wallet-store'
 import * as bip39 from 'bip39'
 import * as bitcoin from 'bitcoinjs-lib'
-import { AlertTriangle, Check, Copy, Download, Eye, EyeOff, Upload } from 'lucide-react'
+import {
+  AlertTriangle,
+  Check,
+  CheckCircle,
+  Copy,
+  Download,
+  Eye,
+  EyeOff,
+  FileKey,
+  FileText,
+  Key,
+  Shield,
+  Upload,
+  Wallet
+} from 'lucide-react'
 import { useState } from 'react'
 
 interface WalletSetupProps {
@@ -44,19 +58,16 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
   const { t } = useLanguage()
   const { toast } = useToast()
 
-  // 使用 Zustand 状态管理 - 类似 Pinia
   const { setWallet, setLoading, setError } = useWalletActions()
   const wallet = useWalletStore((state) => state.wallet)
   const isLoading = useWalletStore((state) => state.isLoading)
   const error = useWalletStore((state) => state.error)
 
-  // 本地组件状态
   const [step, setStep] = useState<SetupStep>('welcome')
   const [showMnemonic, setShowMnemonic] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  // const [mnemonic, setMnemonic] = useState('')
   const [generatedMnemonic, setGeneratedMnemonic] = useState('')
   const [verificationWords, setVerificationWords] = useState<{ word: string; index: number }[]>([])
   const [userVerification, setUserVerification] = useState<string[]>([])
@@ -92,9 +103,6 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
   }
 
   const handleVerificationSubmit = () => {
-    // setStep('set-password')
-    // return
-
     const isCorrect = verificationWords.every((item, index) => userVerification[index]?.toLowerCase().trim() === item.word.toLowerCase())
 
     if (isCorrect) {
@@ -129,7 +137,6 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
 
     const passwordHash = passwordMD5(password)
 
-    // 完成钱包生成，使用用户密码对钱包进行加密
     const child = getWalletPrivateKey(generatedMnemonic)
     const path = ADDRESS_PATH
     const { address } = bitcoin.payments.p2wpkh({
@@ -146,7 +153,6 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
       return
     }
 
-    // 创建加密的钱包文件用于下载
     const walletForFile: WalletFile = {
       mnemonic: generatedMnemonic,
       path,
@@ -157,7 +163,6 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
 
     const encryptedWallet = encryptWallet(walletForFile, passwordHash)
 
-    // 使用 Zustand 状态管理存储钱包信息 - 类似 Pinia 的响应式状态
     const walletInfoData: WalletInfo = {
       isHasWallet: true,
       address: address!,
@@ -185,7 +190,6 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
 
     downloadWalletFile(walletInfo.encryptedWallet)
 
-    // 保存到状态管理中 - 自动持久化到 localStorage
     setWallet(walletInfo)
 
     toast({
@@ -215,17 +219,16 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
 
           setStep('restore-password')
         } else {
-          // 钱包文件有问题
           toast({
-            title: 'Invalid Wallet File',
-            description: 'The selected file is not a valid wallet file.',
+            title: t('wallet.invalidWalletFile'),
+            description: t('wallet.invalidWalletFileInfo'),
             variant: 'destructive'
           })
         }
       } catch (error) {
         toast({
-          title: 'Invalid Wallet File',
-          description: 'The selected file is not a valid wallet file.',
+          title: t('wallet.invalidWalletFile'),
+          description: t('wallet.invalidWalletFileInfo'),
           variant: 'destructive'
         })
       }
@@ -244,8 +247,8 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
 
     if (!uploadedWalletEncrypted) {
       toast({
-        title: 'Invalid Wallet File',
-        description: 'The selected file is not a valid wallet file.',
+        title: t('wallet.invalidWalletFile'),
+        description: t('wallet.invalidWalletFileInfo'),
         variant: 'destructive'
       })
       return
@@ -253,7 +256,6 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
 
     try {
       const decryptedWallet = decryptWallet(uploadedWalletEncrypted, password)
-      console.log(decryptedWallet, uploadedWalletEncrypted)
 
       if (!decryptedWallet.isSuccess) {
         toast({
@@ -288,31 +290,27 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
   }
 
   const handleRestoreFromMnemonic = () => {
-    // 清理助记词：去除前后空格，将换行符和多个空格替换为单个空格，然后分割
     const cleanedMnemonic = generatedMnemonic
       .trim()
-      .replace(/\s+/g, ' ') // 将所有连续空白字符（包括换行符、制表符等）替换为单个空格
-      .toLowerCase() // 转换为小写以确保一致性
+      .replace(/\s+/g, ' ')
+      .toLowerCase()
 
     const words = cleanedMnemonic.split(' ').filter((word) => word.length > 0)
 
     if (words.length !== 12) {
       toast({
-        title: 'Invalid Mnemonic',
-        description: 'Please enter a valid 12-word mnemonic phrase.',
+        title: t('wallet.invalidMnemonic'),
+        description: t('wallet.invalidMnemonicInfo'),
         variant: 'destructive'
       })
       return
     }
 
-    // 更新为清理后的助记词
     setGeneratedMnemonic(words.join(' '))
     setStep('set-password')
   }
 
   const copyToClipboard = (text: string) => {
-    console.log(text)
-
     navigator.clipboard.writeText(text)
     toast({
       title: 'Copied to Clipboard',
@@ -320,397 +318,553 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
     })
   }
 
+  const renderStepIndicator = () => {
+    const steps = ['create-mnemonic', 'verify-mnemonic', 'set-password', 'download-wallet']
+    const currentIndex = steps.indexOf(step)
+    const isRestore = ['restore-method', 'restore-mnemonic', 'restore-file', 'restore-password'].includes(step)
+
+    if (isRestore || step === 'welcome' || step === 'restore-method') return null
+
+    return (
+      <div className="flex items-center justify-center gap-1.5 mb-6">
+        {steps.map((s, i) => {
+          const isCompleted = i < currentIndex
+          const isCurrent = i === currentIndex
+
+          return (
+            <div key={s} className="flex items-center">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  isCompleted
+                    ? 'bg-green-500/20'
+                    : isCurrent
+                    ? 'bg-purple-500/20'
+                    : 'bg-gray-700/50'
+                }`}
+              >
+                {isCompleted ? (
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                ) : isCurrent ? (
+                  <div className="w-3 h-3 rounded-full bg-purple-500 animate-pulse" />
+                ) : (
+                  <div className="w-3 h-3 rounded-full bg-gray-500" />
+                )}
+              </div>
+              {i < steps.length - 1 && (
+                <div
+                  className={`w-12 h-0.5 mx-1 transition-all ${
+                    isCompleted ? 'bg-green-500/50' : 'bg-gray-600'
+                  }`}
+                />
+              )}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const renderWelcomeStep = () => (
+    <div className="space-y-6">
+      <div className="text-center space-y-4">
+        <div className="relative inline-block">
+          <div className="absolute inset-0 bg-purple-500/30 blur-2xl rounded-full"></div>
+          <Wallet className="relative w-20 h-20 text-white mx-auto" />
+        </div>
+        <h2 className="text-2xl font-bold text-white">{t('wallet.title')}</h2>
+        <p className="text-gray-400">{t('wallet.createNewInfo')}</p>
+      </div>
+
+      <div className="space-y-3">
+        <Button
+          onClick={handleCreateWallet}
+          className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <Wallet className="w-5 h-5 mr-2" />
+          {t('wallet.createNew')}
+        </Button>
+
+        <Button
+          onClick={() => setStep('restore-method')}
+          variant="outline"
+          className="w-full py-4 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 rounded-xl font-medium transition-all"
+        >
+          <Shield className="w-5 h-5 mr-2" />
+          {t('wallet.restoreExisting')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderCreateMnemonicStep = () => (
+    <div className="space-y-6">
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto">
+          <AlertTriangle className="w-8 h-8 text-yellow-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white">{t('wallet.saveRecovery')}</h3>
+        <p className="text-gray-400 text-sm">{t('wallet.writeDown')}</p>
+      </div>
+
+      <div className="relative group">
+        <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+        <div className="relative">
+          <div className={`grid grid-cols-3 gap-3 p-4 bg-gray-900/80 backdrop-blur rounded-xl border border-gray-700/50 overflow-x-auto ${!showMnemonic ? 'blur-sm' : ''}`}>
+            {generatedMnemonic.split(' ').map((word, index) => (
+              <div key={index} className="flex items-center gap-2 p-2.5 bg-gray-800/80 rounded-lg border border-gray-700/50 min-w-0">
+                <span className="text-gray-500 text-xs font-mono flex-shrink-0">{String(index + 1).padStart(2, '0')}</span>
+                <span className="text-white font-medium text-sm whitespace-nowrap flex-shrink-0">{word}</span>
+              </div>
+            ))}
+          </div>
+
+          {!showMnemonic && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Button
+                onClick={() => setShowMnemonic(true)}
+                variant="outline"
+                className="border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 hover:border-yellow-400 bg-gray-900/90 px-6 py-3 rounded-xl"
+              >
+                <Eye className="w-5 h-5 mr-2" />
+                {t('wallet.clickReveal')}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showMnemonic && (
+        <div className="flex gap-3">
+          <Button
+            onClick={() => copyToClipboard(generatedMnemonic)}
+            variant="outline"
+            size="lg"
+            className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 rounded-xl"
+          >
+            <Copy className="w-5 h-5 mr-2" />
+            {t('common.copy')}
+          </Button>
+          <Button
+            onClick={handleVerifyMnemonic}
+            size="lg"
+            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold shadow-lg shadow-purple-500/25"
+          >
+            {t('wallet.savedIt')}
+          </Button>
+        </div>
+      )}
+
+      <Button
+        onClick={() => setStep('welcome')}
+        variant="ghost"
+        className="w-full text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl"
+      >
+        {t('common.back')}
+      </Button>
+    </div>
+  )
+
+  const renderVerifyMnemonicStep = () => (
+    <div className="space-y-6">
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto">
+          <CheckCircle className="w-8 h-8 text-blue-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white">{t('wallet.verifyPhrase')}</h3>
+        <p className="text-gray-400 text-sm">{t('wallet.enterWords')}</p>
+      </div>
+
+      <div className="space-y-4">
+        {verificationWords.map((item, index) => (
+          <div key={index} className="space-y-2">
+            <Label className="text-gray-400 text-sm ml-1">
+              Word #{item.index}
+            </Label>
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <Input
+                value={userVerification[index] || ''}
+                onChange={(e) => {
+                  const newVerification = [...userVerification]
+                  newVerification[index] = e.target.value
+                  setUserVerification(newVerification)
+                }}
+                className="relative bg-gray-900/80 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg py-3 pl-4 pr-4"
+                placeholder="Enter word"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-3">
+        <Button
+          onClick={() => setStep('create-mnemonic')}
+          variant="outline"
+          size="lg"
+          className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 rounded-xl"
+        >
+          {t('common.back')}
+        </Button>
+        <Button
+          onClick={handleVerificationSubmit}
+          size="lg"
+          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold shadow-lg shadow-purple-500/25"
+          disabled={userVerification.some((word) => !word.trim())}
+        >
+          {t('common.verify')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderSetPasswordStep = () => (
+    <div className="space-y-6">
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto">
+          <Key className="w-8 h-8 text-purple-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white">{t('wallet.setPassword')}</h3>
+        <p className="text-gray-400 text-sm">{t('wallet.passwordInfo')}</p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label className="text-gray-400 text-sm ml-1">{t('wallet.password')}</Label>
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="relative flex items-center">
+              <Key className="absolute left-4 w-5 h-5 text-gray-400" />
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="relative bg-gray-900/80 border-gray-600 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 rounded-lg py-3 pl-12 pr-12"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 p-1 text-gray-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-gray-400 text-sm ml-1">{t('wallet.confirmPassword')}</Label>
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="relative flex items-center">
+              <Key className="absolute left-4 w-5 h-5 text-gray-400" />
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="relative bg-gray-900/80 border-gray-600 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 rounded-lg py-3 pl-12 pr-4"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <Button
+          onClick={() => setStep(generatedMnemonic ? 'verify-mnemonic' : 'restore-mnemonic')}
+          variant="outline"
+          size="lg"
+          className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 rounded-xl"
+        >
+          {t('common.back')}
+        </Button>
+        <Button
+          onClick={handlePasswordSubmit}
+          size="lg"
+          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold shadow-lg shadow-purple-500/25"
+          disabled={!password || !confirmPassword}
+        >
+          {t('common.next')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderDownloadWalletStep = () => (
+    <div className="space-y-6 text-center">
+      <div className="space-y-4">
+        <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
+          <CheckCircle className="w-10 h-10 text-green-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white">{t('wallet.downloadWallet')}</h3>
+        <p className="text-gray-400 text-sm">{t('wallet.downloadInfo')}</p>
+      </div>
+
+      <div className="p-4 bg-gray-900/80 rounded-xl border border-gray-700/50">
+        <div className="flex items-center justify-center gap-3 text-sm text-gray-400">
+          <FileKey className="w-5 h-5" />
+          <span>Your wallet file is ready for download</span>
+        </div>
+      </div>
+
+      <Button
+        onClick={handleDownloadWallet}
+        size="lg"
+        className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-green-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <Download className="w-5 h-5 mr-2" />
+        {t('wallet.downloadButton')}
+      </Button>
+
+      <p className="text-xs text-gray-500">{t('wallet.needFile')}</p>
+    </div>
+  )
+
+  const renderRestoreMethodStep = () => (
+    <div className="space-y-6">
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto">
+          <Shield className="w-8 h-8 text-blue-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white">{t('wallet.restoreMethod')}</h3>
+        <p className="text-gray-400 text-sm">{t('wallet.chooseMethod')}</p>
+      </div>
+
+      <div className="space-y-3">
+        <Button
+          onClick={() => {
+            setStep('restore-mnemonic')
+            setGeneratedMnemonic('')
+          }}
+          size="lg"
+          className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold shadow-lg shadow-purple-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <FileText className="w-5 h-5 mr-2" />
+          {t('wallet.useRecovery')}
+        </Button>
+
+        <Button
+          onClick={() => setStep('restore-file')}
+          variant="outline"
+          size="lg"
+          className="w-full py-4 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 rounded-xl transition-all"
+        >
+          <Upload className="w-5 h-5 mr-2" />
+          {t('wallet.uploadWalletFile')}
+        </Button>
+      </div>
+
+      <Button
+        onClick={() => setStep('welcome')}
+        variant="ghost"
+        className="w-full text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl"
+      >
+        {t('common.back')}
+      </Button>
+    </div>
+  )
+
+  const renderRestoreMnemonicStep = () => (
+    <div className="space-y-6">
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto">
+          <FileText className="w-8 h-8 text-purple-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white">{t('wallet.enterRecovery')}</h3>
+        <p className="text-gray-400 text-sm">{t('wallet.enter12Words')}</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-gray-400 text-sm ml-1">{t('wallet.recoveryPhrase')}</Label>
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <Textarea
+            value={generatedMnemonic}
+            onChange={(e) => setGeneratedMnemonic(e.target.value)}
+            className="relative bg-gray-900/80 border-gray-600 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 rounded-xl min-h-[120px] p-4 resize-none"
+            placeholder="word1 word2 word3 ... word12"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <Button
+          onClick={() => {
+            setStep('restore-method')
+            setGeneratedMnemonic('')
+          }}
+          variant="outline"
+          size="lg"
+          className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 rounded-xl"
+        >
+          {t('common.back')}
+        </Button>
+        <Button
+          onClick={handleRestoreFromMnemonic}
+          size="lg"
+          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold shadow-lg shadow-purple-500/25"
+          disabled={!generatedMnemonic.trim()}
+        >
+          {t('common.next')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderRestoreFileStep = () => (
+    <div className="space-y-6">
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
+          <FileKey className="w-8 h-8 text-green-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white">{t('wallet.uploadWalletFile')}</h3>
+        <p className="text-gray-400 text-sm">{t('wallet.selectFile')}</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-gray-400 text-sm ml-1">{t('wallet.walletFile')}</Label>
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="relative">
+            <Input
+              type="file"
+              accept=".json"
+              onChange={handleFileUpload}
+              className="relative bg-gray-900/80 border-gray-600 text-white file:bg-green-600 file:text-white file:border-0 file:rounded-lg file:px-4 file:py-2 file:mr-3 cursor-pointer rounded-xl p-1"
+            />
+          </div>
+        </div>
+      </div>
+
+      {walletFile && (
+        <div className="flex items-center gap-3 p-4 bg-gray-900/80 rounded-xl border border-green-500/30">
+          <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+          <span className="text-white font-medium">{walletFile.name}</span>
+          <span className="text-gray-400 text-sm ml-auto">{(walletFile.size / 1024).toFixed(1)} KB</span>
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <Button
+          onClick={() => setStep('restore-method')}
+          variant="outline"
+          size="lg"
+          className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 rounded-xl"
+        >
+          {t('common.back')}
+        </Button>
+        <Button
+          onClick={handleRestoreFromFile}
+          size="lg"
+          className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-green-500/25"
+          disabled={!walletFile}
+        >
+          {t('wallet.restoreWallet')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderRestorePasswordStep = () => (
+    <div className="space-y-6">
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto">
+          <Key className="w-8 h-8 text-purple-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white">{t('wallet.enterPassword')}</h3>
+        <p className="text-gray-400 text-sm">{t('wallet.passwordUsed')}</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-gray-400 text-sm ml-1">{t('wallet.password')}</Label>
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="relative flex items-center">
+            <Key className="absolute left-4 w-5 h-5 text-gray-400" />
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="relative bg-gray-900/80 border-gray-600 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 rounded-lg py-3 pl-12 pr-12"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 p-1 text-gray-400 hover:text-white transition-colors"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <Button
+          onClick={() => setStep('restore-file')}
+          variant="outline"
+          size="lg"
+          className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 rounded-xl"
+        >
+          {t('common.back')}
+        </Button>
+        <Button
+          onClick={onRestorePassword}
+          size="lg"
+          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-semibold shadow-lg shadow-purple-500/25"
+          disabled={!password}
+        >
+          {t('wallet.unlockWallet')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderCurrentStep = () => {
+    switch (step) {
+      case 'welcome':
+        return renderWelcomeStep()
+      case 'create-mnemonic':
+        return renderCreateMnemonicStep()
+      case 'verify-mnemonic':
+        return renderVerifyMnemonicStep()
+      case 'set-password':
+        return renderSetPasswordStep()
+      case 'download-wallet':
+        return renderDownloadWalletStep()
+      case 'restore-method':
+        return renderRestoreMethodStep()
+      case 'restore-mnemonic':
+        return renderRestoreMnemonicStep()
+      case 'restore-file':
+        return renderRestoreFileStep()
+      case 'restore-password':
+        return renderRestorePasswordStep()
+      default:
+        return null
+    }
+  }
+
   return (
-    <div className="min-h-full bg-gray-900 flex flex-col">
-      {/* Header with Language Selector */}
-      <div className="flex justify-between items-center p-4">
+    <div className="h-dvh bg-gradient-to-br from-gray-900 via-purple-900/10 to-gray-900 flex flex-col overflow-hidden">
+      <div className="flex justify-between items-center p-4 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <img src="https://r2.scash.network/logo.png" alt="SCASH Logo" className="w-8 h-8 rounded-full" />
-          <h1 className="text-xl font-semibold text-white">{t('wallet.title')}</h1>
+          <img src="https://r2.scash.network/logo.png" alt="SCASH Logo" className="w-10 h-10 rounded-xl shadow-lg shadow-purple-500/20" />
+          <h1 className="text-xl font-bold text-white">{t('wallet.title')}</h1>
         </div>
         <LanguageSelector />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-gray-800 border-gray-700">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
-              <img src="https://r2.scash.network/logo.png" alt="SCASH Logo" className="w-16 h-16 rounded-full mx-auto" />
-            </div>
-            <CardTitle className="text-2xl text-white">{t('wallet.title')}</CardTitle>
-          </CardHeader>
+      <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
+        <div className="w-full max-w-md">
+          {renderStepIndicator()}
 
-          <CardContent className="space-y-4">
-            {/* Welcome Step */}
-            {step === 'welcome' && (
-              <>
-                <Button onClick={handleCreateWallet} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                  {t('wallet.createNew')}
-                </Button>
-                <Button
-                  onClick={() => setStep('restore-method')}
-                  variant="outline"
-                  className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
-                >
-                  {t('wallet.restoreExisting')}
-                </Button>
-              </>
-            )}
-
-            {/* Create Mnemonic Step */}
-            {step === 'create-mnemonic' && (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <AlertTriangle className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
-                  <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.saveRecovery')}</h3>
-                  <p className="text-gray-300 text-sm mb-4">{t('wallet.writeDown')}</p>
-                </div>
-
-                <div className="relative">
-                  <div className={`grid grid-cols-3 gap-2 p-4 bg-gray-900 rounded-lg ${!showMnemonic ? 'blur-sm' : ''}`}>
-                    {generatedMnemonic.split(' ').map((word, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-800 rounded text-sm">
-                        <span className="text-gray-400 text-xs">{index + 1}.</span>
-                        <span className="text-white">{word}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {!showMnemonic && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Button
-                        onClick={() => setShowMnemonic(true)}
-                        variant="outline"
-                        className="border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        {t('wallet.clickReveal')}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {showMnemonic && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => copyToClipboard(generatedMnemonic)}
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      {t('common.copy')}
-                    </Button>
-                    <Button onClick={handleVerifyMnemonic} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white">
-                      {t('wallet.savedIt')}
-                    </Button>
-                  </div>
-                )}
-
-                <Button onClick={() => setStep('welcome')} variant="ghost" className="w-full text-gray-400 hover:text-white">
-                  {t('common.back')}
-                </Button>
-              </div>
-            )}
-
-            {/* Verify Mnemonic Step */}
-            {step === 'verify-mnemonic' && (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.verifyPhrase')}</h3>
-                  <p className="text-gray-300 text-sm mb-4">{t('wallet.enterWords')}</p>
-                </div>
-
-                <div className="space-y-3">
-                  {verificationWords.map((item, index) => (
-                    <div key={index}>
-                      <Label className="text-gray-300 text-sm">Word #{item.index}</Label>
-                      <Input
-                        value={userVerification[index] || ''}
-                        onChange={(e) => {
-                          const newVerification = [...userVerification]
-                          newVerification[index] = e.target.value
-                          setUserVerification(newVerification)
-                        }}
-                        className="bg-gray-900 border-gray-600 text-white"
-                        placeholder="Enter word"
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setStep('create-mnemonic')}
-                    variant="outline"
-                    className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-                  >
-                    {t('common.back')}
-                  </Button>
-                  <Button
-                    onClick={handleVerificationSubmit}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                    disabled={userVerification.some((word) => !word.trim())}
-                  >
-                    Verify
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Set Password Step */}
-            {step === 'set-password' && (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.setPassword')}</h3>
-                  <p className="text-gray-300 text-sm mb-4">{t('wallet.passwordInfo')}</p>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-gray-300 text-sm">{t('wallet.password')}</Label>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="bg-gray-900 border-gray-600 text-white pr-10"
-                        placeholder={t('wallet.passwordInput')}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-300 text-sm">{t('wallet.confirmPassword')}</Label>
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="bg-gray-900 border-gray-600 text-white"
-                      placeholder={t('wallet.confirmPassword')}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setStep(generatedMnemonic ? 'verify-mnemonic' : 'restore-mnemonic')}
-                    variant="outline"
-                    className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-                  >
-                    {t('common.back')}
-                  </Button>
-                  <Button
-                    onClick={handlePasswordSubmit}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                    disabled={!password || !confirmPassword}
-                  >
-                    {t('common.next')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Download Wallet Step */}
-            {step === 'download-wallet' && (
-              <div className="space-y-4 text-center">
-                <div>
-                  <Download className="h-12 w-12 text-purple-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.downloadWallet')}</h3>
-                  <p className="text-gray-300 text-sm mb-4">{t('wallet.downloadInfo')}</p>
-                </div>
-
-                <Button onClick={handleDownloadWallet} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                  <Download className="h-4 w-4 mr-2" />
-                  {t('wallet.downloadButton')}
-                </Button>
-
-                <p className="text-xs text-gray-400">{t('wallet.needFile')}</p>
-              </div>
-            )}
-
-            {/* Restore Method Step */}
-            {step === 'restore-method' && (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.restoreMethod')}</h3>
-                  <p className="text-gray-300 text-sm mb-4">{t('wallet.chooseMethod')}</p>
-                </div>
-
-                <Button
-                  onClick={() => {
-                    setStep('restore-mnemonic')
-                    setGeneratedMnemonic('')
-                  }}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  {t('wallet.useRecovery')}
-                </Button>
-
-                <Button
-                  onClick={() => setStep('restore-file')}
-                  variant="outline"
-                  className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {t('wallet.uploadWalletFile')}
-                </Button>
-
-                <Button onClick={() => setStep('welcome')} variant="ghost" className="w-full text-gray-400 hover:text-white">
-                  {t('common.back')}
-                </Button>
-              </div>
-            )}
-
-            {/* Restore Mnemonic Step */}
-            {step === 'restore-mnemonic' && (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.enterRecovery')}</h3>
-                  <p className="text-gray-300 text-sm mb-4">{t('wallet.enter12Words')}</p>
-                </div>
-
-                <div>
-                  <Label className="text-gray-300 text-sm">{t('wallet.recoveryPhrase')}</Label>
-                  <Textarea
-                    value={generatedMnemonic}
-                    onChange={(e) => setGeneratedMnemonic(e.target.value)}
-                    className="bg-gray-900 border-gray-600 text-white min-h-[100px]"
-                    placeholder={t('wallet.enter12Words')}
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => {
-                      setStep('restore-method')
-                      setGeneratedMnemonic('')
-                    }}
-                    variant="outline"
-                    className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-                  >
-                    {t('common.back')}
-                  </Button>
-                  <Button
-                    onClick={handleRestoreFromMnemonic}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                    disabled={!generatedMnemonic.trim()}
-                  >
-                    {t('common.next')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Restore File Step */}
-            {step === 'restore-file' && (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.uploadWalletFile')}</h3>
-                  <p className="text-gray-300 text-sm mb-4">{t('wallet.selectFile')}</p>
-                </div>
-
-                <div>
-                  <Label className="text-gray-300 text-sm">{t('wallet.walletFile')}</Label>
-                  <Input
-                    type="file"
-                    accept=".json"
-                    onChange={handleFileUpload}
-                    className="bg-gray-900 border-gray-600 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1"
-                  />
-                </div>
-
-                {walletFile && (
-                  <div className="p-3 bg-gray-900 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-400" />
-                      <span className="text-sm text-gray-300">{walletFile.name}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setStep('restore-method')}
-                    variant="outline"
-                    className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-                  >
-                    {t('common.back')}
-                  </Button>
-                  <Button
-                    onClick={handleRestoreFromFile}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                    disabled={!walletFile}
-                  >
-                    {t('wallet.restoreWallet')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Restore Password Step */}
-            {step === 'restore-password' && (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-2">{t('wallet.enterPassword')}</h3>
-                  <p className="text-gray-300 text-sm mb-4">{t('wallet.passwordUsed')}</p>
-                </div>
-
-                <div>
-                  <Label className="text-gray-300 text-sm">{t('wallet.password')}</Label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="bg-gray-900 border-gray-600 text-white pr-10"
-                      placeholder={t('wallet.enterPassword')}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setStep('restore-file')}
-                    variant="outline"
-                    className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-                  >
-                    {t('common.back')}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      // Mock password verification
-                      onRestorePassword()
-                    }}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                    disabled={!password}
-                  >
-                    {t('wallet.unlockWallet')}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          <div className="bg-gray-800/40 backdrop-blur-xl rounded-3xl p-8 border border-gray-700/50 shadow-2xl">
+            {renderCurrentStep()}
+          </div>
+        </div>
       </div>
     </div>
   )
