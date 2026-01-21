@@ -4,30 +4,15 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useLanguage } from '@/contexts/language-context'
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  Menu,
-  Bell,
-  Settings,
-  Clock,
-  X,
-  Database,
-  Wifi,
-  WifiOff,
-  MessageSquare,
-  ChevronDown,
-  ChevronUp
-} from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Menu, Bell, Settings, Clock, X, Database, Wifi, WifiOff, MessageSquare } from 'lucide-react'
 import { calcValue, NAME_TOKEN, onOpenExplorer } from '@/lib/utils'
 import { PendingTransaction, Transaction, useWalletActions, useWalletState } from '@/stores/wallet-store'
 import { getAddressTxsExtApi } from '@/lib/externalApi'
-import { parseDapMessage, formatDapPreview, type DapMessage } from '@/lib/dap'
+import { parseDapMessage, type DapMessage } from '@/lib/dap'
 import Decimal from 'decimal.js'
 import { getRawTransactionApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
-import { MarkdownRenderer } from './markdown-renderer'
+import { DapMessageDisplay } from './dap-message-display'
 
 interface WalletHomeProps {
   onNavigate: (view: string) => void
@@ -46,7 +31,6 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
 
   // 存储每笔交易的 DAP 消息
   const [dapMessages, setDapMessages] = useState<Map<string, DapMessage>>(new Map())
-  const [expandedTxId, setExpandedTxId] = useState<string | null>(null) // 展开的交易 ID
   const [isScrolled, setIsScrolled] = useState(false)
 
   async function getTxs() {
@@ -243,7 +227,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
       container.addEventListener('scroll', handleScroll)
     }
     window.addEventListener('scroll', handleScroll)
-    
+
     return () => {
       if (container) {
         container.removeEventListener('scroll', handleScroll)
@@ -293,11 +277,7 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                 isScrolled ? 'px-2 py-0.5' : 'px-3 py-1.5'
               }`}
             >
-              <div
-                className={`text-purple-300 font-medium transition-all duration-300 ${
-                isScrolled ? 'text-[14px]' : 'text-xs'
-              }`}
-              >
+              <div className={`text-purple-300 font-medium transition-all duration-300 ${isScrolled ? 'text-[14px]' : 'text-xs'}`}>
                 {t('wallet.blockHeight')}
               </div>
               <div className={`text-white font-semibold transition-all duration-300 ${isScrolled ? 'text-[10px]' : 'text-sm'}`}>
@@ -587,7 +567,6 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
 
               {transactions.map((tx) => {
                 const dapMessage = dapMessages.get(tx.id)
-                const isExpanded = expandedTxId === tx.id
 
                 return (
                   <div key={tx.id} className=" p-3 bg-gray-900 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors">
@@ -649,32 +628,9 @@ export function WalletHome({ onNavigate }: WalletHomeProps) {
                                   ? t('dap.receivedNote')
                                   : t('dap.senderNote')}
                             </p>
-                            <div className="text-gray-300 text-sm break-words">
-                              <MarkdownRenderer>
-                                {isExpanded ? dapMessage.content : formatDapPreview(dapMessage.content, 100)}
-                              </MarkdownRenderer>
-                            </div>
-                            {dapMessage.content.length > 100 && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setExpandedTxId(isExpanded ? null : tx.id)
-                                }}
-                                className="text-purple-400 text-xs hover:text-purple-300 mt-2 flex items-center gap-1"
-                              >
-                                {isExpanded ? (
-                                  <>
-                                    <ChevronUp className="h-3 w-3" /> {t('dap.collapse')}
-                                  </>
-                                ) : (
-                                  <>
-                                    <ChevronDown className="h-3 w-3" /> {t('dap.expand')}
-                                  </>
-                                )}
-                              </button>
-                            )}
                           </div>
                         </div>
+                        <DapMessageDisplay content={dapMessage.content} />
                       </div>
                     )}
 

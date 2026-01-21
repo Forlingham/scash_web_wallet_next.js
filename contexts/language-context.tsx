@@ -118,7 +118,10 @@ const translations = {
     'dap.senderNote': 'Sender Note',
     'dap.expand': 'Expand to view full content',
     'dap.collapse': 'Collapse',
-    'dap.preview': "Preview",
+    'dap.preview': 'Preview',
+    'dap.clickToView': 'Click to view content',
+    'dap.clickToExpand': 'Click to view full content',
+    'dap.messageContent': 'DAP Message Content',
 
     // Settings
     'settings.title': 'Settings',
@@ -464,7 +467,10 @@ const translations = {
     'dap.senderNote': '对方备注',
     'dap.expand': '展开查看完整内容',
     'dap.collapse': '收起',
-    'dap.preview':"预览",
+    'dap.preview': '预览',
+    'dap.clickToView': '点击查看内容',
+    'dap.clickToExpand': '点击查看完整内容',
+    'dap.messageContent': 'DAP 消息内容',
 
     // Settings
     'settings.title': '设置',
@@ -810,7 +816,10 @@ const translations = {
     'dap.senderNote': 'Сообщение отправителя',
     'dap.expand': 'Развернуть для просмотра полного текста',
     'dap.collapse': 'Свернуть',
-    'dap.preview': "Предпросмотр",
+    'dap.preview': 'Предпросмотр',
+    'dap.clickToView': 'Нажмите, чтобы просмотреть содержимое',
+    'dap.clickToExpand': 'Нажмите, чтобы просмотреть полное содержимое',
+    'dap.messageContent': 'Содержимое сообщения DAP',
 
     // Settings
     'settings.title': 'Настройки',
