@@ -39,6 +39,7 @@ import { PendingTransaction, useWalletActions, useWalletState } from '@/stores/w
 import Decimal from 'decimal.js'
 import { ArrowUpDown, ChevronRight, ExternalLink, Lock, QrCode, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { DapMessageDisplay } from './dap-message-display'
 
 interface WalletSendProps {
   onNavigate: (view: string) => void
@@ -611,7 +612,12 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
                 {dapMessage && (
                   <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-600/30 backdrop-blur-sm">
                     <p className="text-purple-300 text-xs uppercase tracking-wide mb-1">{t('send.message')}:</p>
-                    <p className="text-white text-sm break-words">{dapMessage}</p>
+                    <DapMessageDisplay
+                      content={dapMessage}
+                      buttonText={<>{t('dap.preview')}</>}
+                      title={t('send.message')}
+                      className="p-0 border-none bg-transparent justify-center"
+                    />
                   </div>
                 )}
 
@@ -713,7 +719,12 @@ export function WalletSend({ onNavigate }: WalletSendProps) {
             {dapMessage && (
               <div className="bg-gray-900/50 rounded-lg p-3 mt-3">
                 <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">{t('send.message') || 'Message'}:</div>
-                <div className="text-white text-sm break-words">{dapMessage}</div>
+                <DapMessageDisplay
+                  content={dapMessage}
+                  buttonText={<>{t('dap.preview')}</>}
+                  title={t('send.message')}
+                  className="p-0 border-none bg-transparent justify-center"
+                />
               </div>
             )}
           </CardContent>

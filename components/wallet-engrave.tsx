@@ -320,7 +320,12 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
                 <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-xl p-4 border border-purple-600/30 backdrop-blur-sm">
                   <div className="text-center">
                     <p className="text-purple-300 text-xs uppercase tracking-wide mb-2">{t('send.engraveContent')}</p>
-                    <p className="text-white text-lg font-semibold break-words">{engraveText}</p>
+                    <DapMessageDisplay
+                      content={engraveText}
+                      buttonText={<>{t('dap.preview')}</>}
+                      title={t('dap.preview')}
+                      className="p-0 border-none bg-transparent justify-center"
+                    />
                   </div>
                 </div>
 
@@ -380,7 +385,12 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
 
             <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-600/30">
               <p className="text-purple-300 text-xs uppercase tracking-wide mb-1">{t('send.engraveContent')}:</p>
-              <p className="text-white text-sm break-words">{engraveText}</p>
+              <DapMessageDisplay
+                content={engraveText}
+                buttonText={<>{t('dap.preview')}</>}
+                title={t('dap.preview')}
+                className="p-0 border-none bg-transparent"
+              />
             </div>
 
             <div className="space-y-2 border-t border-gray-600 pt-3">
@@ -487,9 +497,7 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-3">
               <MessageSquare className="h-8 w-8 text-white" />
             </div>
-            <p className="text-gray-300 text-sm">
-              {t('send.engraveDesc')}
-            </p>
+            <p className="text-gray-300 text-sm">{t('send.engraveDesc')}</p>
           </div>
 
           <div className="space-y-2">
@@ -516,7 +524,9 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
               placeholder={t('send.engravePlaceholder')}
               className="w-full bg-gray-900 text-white border border-gray-600 rounded-lg p-3 resize-none h-32 focus:outline-none focus:border-purple-400"
             />
-            <div className="text-right text-xs text-gray-400">{engraveText.length} {t('send.engraveChunkCount').toLowerCase()}</div>
+            <div className="text-right text-xs text-gray-400">
+              {engraveText.length} {t('send.engraveChunkCount').toLowerCase()}
+            </div>
           </div>
 
           {dapInfo && (
@@ -556,7 +566,9 @@ export function WalletEngrave({ onNavigate }: WalletEngraveProps) {
       </Card>
 
       {totalFee > 0 && pickUnspents.length === 0 && (
-        <div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-700 rounded-lg p-2">{t('send.engraveInsufficient')}</div>
+        <div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-700 rounded-lg p-2">
+          {t('send.engraveInsufficient')}
+        </div>
       )}
 
       <Button
