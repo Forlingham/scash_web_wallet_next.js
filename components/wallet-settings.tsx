@@ -179,12 +179,12 @@ export function WalletSettings({ onNavigate, onLockWallet }: WalletSettingsProps
     })
   }
 
-  const downloadBackup = () => {
-    downloadWalletFile(wallet.encryptedWallet)
+  const downloadBackup = async () => {
+    await downloadWalletFile(wallet.encryptedWallet)
 
     toast({
-      title: 'Backup Downloaded',
-      description: 'Your wallet backup has been downloaded successfully'
+      title: t('wallet.backupDownloaded'),
+      description: t('wallet.backupDownloadedInfo')
     })
   }
 

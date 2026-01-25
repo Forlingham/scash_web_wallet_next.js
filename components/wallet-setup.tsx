@@ -178,7 +178,7 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
     setStep('download-wallet')
   }
 
-  const handleDownloadWallet = () => {
+  const handleDownloadWallet = async () => {
     if (!walletInfo || !walletInfo.encryptedWallet) {
       toast({
         title: 'Error',
@@ -188,7 +188,7 @@ export function WalletSetup({ onWalletCreated }: WalletSetupProps) {
       return
     }
 
-    downloadWalletFile(walletInfo.encryptedWallet)
+    await downloadWalletFile(walletInfo.encryptedWallet)
 
     setWallet(walletInfo)
 

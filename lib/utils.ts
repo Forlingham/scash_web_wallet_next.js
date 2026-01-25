@@ -146,7 +146,10 @@ export function decryptWallet(walletHex: string, password: string) {
   }
 }
 
-export function downloadWalletFile(encryptedWallet: string) {
+export async function downloadWalletFile(encryptedWallet: string, fileName = 'scash-wallet.json') {
+  if (process.env.NEXT_PUBLIC_BITCOIN_RPC_IS_TESTNET === 'true') {
+    fileName = 'scash-wallet-testnet.json'
+  }
   // Create mock encrypted wallet file
   const walletData: WalletFileData = {
     version: VERSION,
@@ -155,11 +158,31 @@ export function downloadWalletFile(encryptedWallet: string) {
     timestamp: Date.now()
   }
 
-  const blob = new Blob([JSON.stringify(walletData, null, 2)], { type: 'application/json' })
+  const content = JSON.stringify(walletData, null, 2)
+  const blob = new Blob([content], { type: 'application/json' })
+
+  // Try to use Web Share API first (better for mobile apps/WebViews)
+  if (typeof navigator !== 'undefined' && navigator.canShare && navigator.share) {
+    try {
+      const file = new File([blob], fileName, { type: 'application/json' })
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'SCASH Wallet Backup',
+          text: 'Please keep this file safe.'
+        })
+        return
+      }
+    } catch (error) {
+      console.warn('Share failed, falling back to download:', error)
+      // Continue to download fallback if share fails (e.g. user cancelled)
+    }
+  }
+
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'scash-wallet.json'
+  a.download = fileName
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
