@@ -179,14 +179,20 @@ export async function downloadWalletFile(encryptedWallet: string, fileName = 'sc
     }
   }
 
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = fileName
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  // Fallback to data URI download via FileReader
+  // This avoids blob: URLs which can cause XHR/Network errors in some WebView/App environments
+  // that might try to fetch the blob URL via their own network stack and fail.
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const url = e.target?.result as string
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+  reader.readAsDataURL(blob)
 }
 
 const SAT_PER_SCASH = new Decimal(1e8)
