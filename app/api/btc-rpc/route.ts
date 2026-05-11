@@ -2,13 +2,14 @@
 // 简介：接受 { method, params }，服务端调用并返回结果。
 
 import { NextRequest } from 'next/server';
-import { callBitcoinRpc } from '../../../lib/server/bitcoinRpc';
+import { callBitcoinRpc, getPreferredNodeFromHeaders } from '../../../lib/server/bitcoinRpc';
 
 export const runtime = 'nodejs'; // 使用 Node 运行时，支持 Buffer 基础认证
 export const dynamic = 'force-dynamic'; // 禁止静态缓存
 
 export async function POST(req: NextRequest) {
   try {
+    const preferredNodeUrl = getPreferredNodeFromHeaders(req);
     const payload = await req.json();
     const method = payload?.method;
     const params = Array.isArray(payload?.params) ? payload.params : [];
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: '缺少或非法的 method' }, { status: 400 });
     }
 
-    const result = await callBitcoinRpc<any>(method, params);
+    const result = await callBitcoinRpc<any>(method, params, { preferredNodeUrl });
     return Response.json({ result }, { status: 200 });
   } catch (err: any) {
     const status = err?.statusCode ?? 500;
@@ -25,4 +26,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: message }, { status });
   }
 }
-

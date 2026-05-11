@@ -2,6 +2,32 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { decryptAES_Hex, encryptAES_Hex } from './cryoto'
 
+const PREFERRED_NODE_KEY = 'scash_preferred_rpc_node'
+
+/**
+ * 从 localStorage 获取上次成功的 RPC 节点 URL
+ */
+function getPreferredNode(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    return localStorage.getItem(PREFERRED_NODE_KEY)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 将成功的 RPC 节点 URL 保存到 localStorage
+ */
+function setPreferredNode(nodeUrl: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(PREFERRED_NODE_KEY, nodeUrl)
+  } catch {
+    // localStorage 不可用时静默忽略
+  }
+}
+
 export class AxiosTool {
   protected instance: AxiosInstance
 
@@ -21,6 +47,12 @@ export class AxiosTool {
         const iv = Date.now() + ''
         config.headers.time = iv
 
+        // 从 localStorage 读取上次成功的节点 URL，添加到请求 header
+        const preferredNode = getPreferredNode()
+        if (preferredNode) {
+          config.headers['x-preferred-node'] = preferredNode
+        }
+
         if (config && config.method === 'post' && !(config.data instanceof FormData)) {
           // const encryptedData = encryptAES_Hex(JSON.stringify(config.data), iv, process.env.AES_KEY)
           // config.data = encryptedData
@@ -38,6 +70,13 @@ export class AxiosTool {
     this.instance.interceptors.response.use(
       (response) => {
         const data = this.decryptData(response)
+
+        // 从响应中提取成功的节点 URL 并保存到 localStorage
+        const nodeEndpoint = data?.data?.data?.nodeInfo?.endpoint
+        if (nodeEndpoint) {
+          setPreferredNode(nodeEndpoint)
+        }
+
         if (data.data.code === 205) {
           throw data
         }

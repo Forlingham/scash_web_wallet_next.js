@@ -1,12 +1,13 @@
-import { callBitcoinRpc } from '../../../lib/server/bitcoinRpc'
+import { callBitcoinRpc, getPreferredNodeFromHeaders } from '../../../lib/server/bitcoinRpc'
 import { apiOk, apiErr } from '../../../lib/server/apiResponse'
 
 export const runtime = 'nodejs' // 使用 Node 运行时，支持 Buffer 基础认证
 export const dynamic = 'force-dynamic' // 禁止静态缓存
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('getblockchaininfo')
+    const preferredNodeUrl = getPreferredNodeFromHeaders(req)
+    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('getblockchaininfo', [], { preferredNodeUrl })
     const message = '获取区块链信息成功'
     const code = 200
     return apiOk(result, code, message, { endpoint, responseTime })

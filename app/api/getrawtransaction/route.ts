@@ -1,4 +1,4 @@
-import { callBitcoinRpc } from '../../../lib/server/bitcoinRpc'
+import { callBitcoinRpc, getPreferredNodeFromHeaders } from '../../../lib/server/bitcoinRpc'
 import { apiOk, apiErr } from '../../../lib/server/apiResponse'
 
 export const runtime = 'nodejs' // 使用 Node 运行时，支持 Buffer 基础认证
@@ -13,7 +13,8 @@ export async function GET(req: Request) {
   }
 
   try {
-    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('getrawtransaction', [txid, true])
+    const preferredNodeUrl = getPreferredNodeFromHeaders(req)
+    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('getrawtransaction', [txid, true], { preferredNodeUrl })
     const message = `获取原始交易 ${txid} 成功`
     const code = 200
     return apiOk(result, code, message, { endpoint, responseTime })
