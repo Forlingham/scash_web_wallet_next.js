@@ -1,4 +1,4 @@
-import { callBitcoinRpc } from '../../../lib/server/bitcoinRpc'
+import { callBitcoinRpc, getPreferredNodeFromHeaders } from '../../../lib/server/bitcoinRpc'
 import { apiOk, apiErr } from '../../../lib/server/apiResponse'
 
 export const runtime = 'nodejs' // 使用 Node 运行时，支持 Buffer 基础认证
@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic' // 禁止静态缓存
 
 export async function POST(req: Request) {
   try {
+    const preferredNodeUrl = getPreferredNodeFromHeaders(req)
+
     let rawtx: string | undefined
 
     const contentType = req.headers.get('content-type') || ''
@@ -27,7 +29,7 @@ export async function POST(req: Request) {
       return apiErr(400, 'rawtx 必须为十六进制字符串')
     }
 
-    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('sendrawtransaction', [cleaned])
+    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('sendrawtransaction', [cleaned], { preferredNodeUrl })
     const message = '发送原始交易成功'
     const code = 200
     return apiOk({ txid: result }, code, message, { endpoint, responseTime })

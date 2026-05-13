@@ -1,4 +1,4 @@
-import { callBitcoinRpc } from '../../../lib/server/bitcoinRpc'
+import { callBitcoinRpc, getPreferredNodeFromHeaders } from '../../../lib/server/bitcoinRpc'
 import { apiOk, apiErr } from '../../../lib/server/apiResponse'
 
 export const runtime = 'nodejs' // 使用 Node 运行时，支持 Buffer 基础认证
@@ -11,7 +11,8 @@ export async function GET(req: Request) {
     confTarget = '6'
   }
   try {
-    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('estimatesmartfee', [Number(confTarget)])
+    const preferredNodeUrl = getPreferredNodeFromHeaders(req)
+    const { result, endpoint, responseTime } = await callBitcoinRpc<any>('estimatesmartfee', [Number(confTarget)], { preferredNodeUrl })
     if (result?.errors) {
       const status = 201
       const message = result?.errors?.[0] ?? '内部错误'
